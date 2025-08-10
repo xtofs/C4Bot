@@ -21,7 +21,7 @@ public class InteractivePlayer(string name) : IPlayer
     {
         while (true)
         {
-            Console.Write($"{PlayerName}, enter column (1-{GameBoard.Columns}): ");
+            Console.Write($"{PlayerName} ({(player == CellState.X ? "X" : "O")}), enter column (1-{GameBoard.Columns}): ");
             if (int.TryParse(Console.ReadLine(), out var col) && col >= 1 && col <= GameBoard.Columns && !board.IsColumnFull(col - 1))
             {
                 return col - 1;
