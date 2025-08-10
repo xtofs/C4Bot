@@ -16,6 +16,7 @@ var players = new List<IPlayer>
     new NegamaxPlayer("Negamax-6", 6),                    // Basic evaluation (terminal only)
     new EnhancedNegamaxPlayer("EnhancedNegamax-6", 6),    // Smart evaluation with heuristics
     new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),
+    new HybridPlayer("Hybrid-MCTS+Enhanced"),             // Opening MCTS + Endgame Enhanced Negamax
 };
 
 Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.PlayerName))}");

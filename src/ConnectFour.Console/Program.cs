@@ -15,6 +15,7 @@ class Program
           ("MonteCarloTreeSearch (1000)", name => new MonteCarloTreeSearchPlayer(name, 1000)),
           ("Negamax (6)", name => new NegamaxPlayer(name, 6)),
           ("EnhancedNegamax (6)", name => new EnhancedNegamaxPlayer(name, 6)),
+          ("Hybrid (MCTS+Enhanced)", name => new HybridPlayer(name)),
         ];
 
         IPlayer playerX, playerO;
