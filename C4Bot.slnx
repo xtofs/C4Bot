@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src\ConnectFour\ConnectFour.csproj" />
+    <Project Path="src\ConnectFour.Console\ConnectFour.Console.csproj" />
+  </Folder>
+</Solution>

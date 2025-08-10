@@ -13,4 +13,4 @@ The board state implementation should have a ergonomic external interface (cell 
 
 The implementation should prefer to use immutable types and reduce allocation where sensible.
 
-implementation should follow modern C# idioms and best practices and specifically adhere to D:\.editorconfig
+implementation should follow modern C# idioms and best practices and specifically adhere to D:\.editorconfig . workspace layout should follow common practics (common repo files, folde names, etc)
