@@ -5,23 +5,23 @@ namespace ConnectFour;
 /// <summary>
 /// A player that prompts a human for input via the console.
 /// </summary>
-public class HumanPlayer : IPlayer
+/// <remarks>
+/// Creates a new human player with the given name.
+/// </remarks>
+/// <param name="name">The display name for the player.</param>
+public class InteractivePlayer(string name) : IPlayer
 {
     /// <inheritdoc/>
-    public string Name { get; }
+    public string PlayerName { get; } = name;
 
-    /// <summary>
-    /// Creates a new human player with the given name.
-    /// </summary>
-    /// <param name="name">The display name for the player.</param>
-    public HumanPlayer(string name) => Name = name;
+    public string AlgorithmName => "Interactive";
 
     /// <inheritdoc/>
     public int ChooseMove(GameBoard board, CellState player)
     {
         while (true)
         {
-            Console.Write($"{Name}, enter column (1-{GameBoard.Columns}): ");
+            Console.Write($"{PlayerName}, enter column (1-{GameBoard.Columns}): ");
             if (int.TryParse(Console.ReadLine(), out var col) && col >= 1 && col <= GameBoard.Columns && !board.IsColumnFull(col - 1))
             {
                 return col - 1;

@@ -9,7 +9,10 @@ namespace ConnectFour;
 public class MonteCarloTreeSearchPlayer : IPlayer
 {
     /// <inheritdoc/>
-    public string Name { get; }
+    public string PlayerName { get; }
+
+    public string AlgorithmName => $"MonteCarloTreeSearch ({simulations})";
+
     private readonly int simulations;
 
     /// <summary>
@@ -19,7 +22,7 @@ public class MonteCarloTreeSearchPlayer : IPlayer
     /// <param name="simulations">The number of simulations to run (default 1000).</param>
     public MonteCarloTreeSearchPlayer(string name, int simulations = 1000)
     {
-        Name = name;
+        PlayerName = name;
         this.simulations = simulations;
     }
 

@@ -62,7 +62,7 @@ public class Tournament
         int player1Wins = 0, player2Wins = 0, draws = 0;
         var totalTime = TimeSpan.Zero;
 
-        Console.Write($"Match: {player1.Name} vs {player2.Name} - ");
+        Console.Write($"Match: {player1.PlayerName} vs {player2.PlayerName} - ");
 
         for (int game = 0; game < gameCount; game++)
         {
@@ -103,8 +103,8 @@ public class Tournament
         Console.WriteLine($" Done!");
 
         return new MatchResult(
-            player1.Name,
-            player2.Name, 
+            player1.PlayerName,
+            player2.PlayerName, 
             player1Wins,
             player2Wins,
             draws,
@@ -274,7 +274,7 @@ public class Tournament
             {
                 if (rowPlayer == colPlayer)
                 {
-                    Console.Write(" |     -   ");
+                    Console.Write(" |    -    ");
                 }
                 else if (matchLookup.TryGetValue((rowPlayer, colPlayer), out var match))
                 {
@@ -283,7 +283,7 @@ public class Tournament
                 }
                 else
                 {
-                    Console.Write(" |    N/A  ");
+                    Console.Write(" |   N/A   ");
                 }
             }
             Console.WriteLine();

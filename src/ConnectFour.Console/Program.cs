@@ -6,71 +6,73 @@ class Program
 {
     static void Main(string[] args)
     {
-        System.Console.WriteLine("Welcome to Connect Four!");
+        Console.WriteLine("Welcome to Connect Four!");
+
+        // a list of algorithm choices
+        (string AlgorithmName, Func<string, IPlayer> Factory)[] playerChoices = [
+          ("Console", name => new InteractivePlayer(name)),
+          ("Random", name => new RandomPlayer(name)),
+          ("MonteCarloTreeSearch (1000)", name => new MonteCarloTreeSearchPlayer(name, 1000)),
+          ("Negamax (6)", name => new NegamaxPlayer(name, 6)),
+          ("EnhancedNegamax (6)", name => new EnhancedNegamaxPlayer(name, 6)),
+        ];
+
         IPlayer playerX, playerO;
-        if (args.Length >= 2 && IsValidArg(args[0]) && IsValidArg(args[1]))
+        if (args.Length >= 2 &&
+            int.TryParse(args[0], out var a0) && a0 >= 1 && a0 <= playerChoices.Length &&
+            int.TryParse(args[1], out var a1) && a1 >= 1 && a1 <= playerChoices.Length)
         {
-            playerX = CreatePlayerFromArg(args[0], "Player X");
-            playerO = CreatePlayerFromArg(args[1], "Player O");
-            System.Console.WriteLine($"Player X: {playerX.GetType().Name}");
-            System.Console.WriteLine($"Player O: {playerO.GetType().Name}");
+            playerX = CreatePlayerFromArg(playerChoices, a0, "Player X");
+            playerO = CreatePlayerFromArg(playerChoices, a1, "Player O");
+
+            Console.WriteLine($"Player X {playerX.PlayerName} {playerX.AlgorithmName}");
+            Console.WriteLine($"Player O {playerO.PlayerName} {playerO.AlgorithmName}");
+        }
+        else if (args.Length != 2)
+        {
+            Console.WriteLine("Please provide two player selections as command line arguments. Or none for interactive selection.");
+            Console.WriteLine("Available algorithms:");
+            foreach (var ((name, _), i) in playerChoices.Select((a, i) => (a, i + 1)))
+            {
+                Console.WriteLine($" - {i}, {name}");
+            }
+            throw new ArgumentException();
         }
         else
         {
-            System.Console.WriteLine("Select Player X: 1=Human, 2=Negamax, 3=MCTS, 4=Random");
-            playerX = SelectPlayerX();
-            System.Console.WriteLine("Select Player O: 1=Human, 2=Negamax, 3=MCTS, 4=Random");
-            playerO = SelectPlayerO();
+            playerX = SelectPlayer(playerChoices, "Player X");
+            playerO = SelectPlayer(playerChoices, "Player O");
         }
+
         GameRunner.RunGame(playerX, playerO);
     }
 
-    static bool IsValidArg(string arg)
+
+    static IPlayer CreatePlayerFromArg((string AlgorithmName, Func<string, IPlayer> Factory)[] choices, int arg, string name)
     {
-        return arg == "1" || arg == "2" || arg == "3" || arg == "4";
+        var choice = choices[arg - 1];
+
+        return choice.Factory(name);
     }
 
-    static IPlayer CreatePlayerFromArg(string arg, string name)
+    static IPlayer SelectPlayer((string AlgorithmName, Func<string, IPlayer> Factory)[] choices, string playerName)
     {
-        return arg switch
+        Console.WriteLine($"Select algorithm for {playerName}:");
+        Console.WriteLine($"Enter Number between 1 and {choices.Length}:");
+        foreach (var ((name, _), i) in choices.Select((a, i) => (a, i + 1)))
         {
-            "1" => new HumanPlayer(name),
-            "2" => new NegamaxPlayer(name),
-            "3" => new MonteCarloTreeSearchPlayer(name),
-            "4" => new RandomPlayer(name),
-            _ => throw new ArgumentException($"Invalid player argument: {arg}")
-        };
-    }
-
-    static IPlayer SelectPlayerX()
-    {
-        while (true)
-        {
-            var input = System.Console.ReadLine();
-            switch (input)
-            {
-                case "1": return new HumanPlayer("Player X");
-                case "2": return new NegamaxPlayer("Player X");
-                case "3": return new MonteCarloTreeSearchPlayer("Player X");
-                case "4": return new RandomPlayer("Player X");
-            }
-            System.Console.WriteLine("Invalid selection. Enter 1, 2, 3, or 4:");
+            Console.WriteLine($" - {i}, {name}");
         }
-    }
 
-    static IPlayer SelectPlayerO()
-    {
         while (true)
         {
-            var input = System.Console.ReadLine();
-            switch (input)
+            var input = Console.ReadLine();
+            if (int.TryParse(input, out var choiceIndex) && choiceIndex >= 1 && choiceIndex <= choices.Length)
             {
-                case "1": return new HumanPlayer("Player O");
-                case "2": return new NegamaxPlayer("Player O");
-                case "3": return new MonteCarloTreeSearchPlayer("Player O");
-                case "4": return new RandomPlayer("Player O");
+                return choices[choiceIndex - 1].Factory(playerName);
             }
-            System.Console.WriteLine("Invalid selection. Enter 1, 2, 3, or 4:");
+
+            Console.WriteLine($"Invalid selection. Enter Number between 1 and {choices.Length}:");
         }
     }
 }

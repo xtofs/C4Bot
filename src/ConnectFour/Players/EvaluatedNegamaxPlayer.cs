@@ -6,27 +6,24 @@ namespace ConnectFour;
 /// A Negamax player with enhanced position evaluation using Connect Four-specific heuristics.
 /// Uses the NegamaxEngine with a ConnectFourPositionEvaluator.
 /// </summary>
-public class EnhancedNegamaxPlayer : IPlayer
+/// <remarks>
+/// Creates a new Enhanced Negamax player.
+/// </remarks>
+/// <param name="name">The display name for the player.</param>
+/// <param name="maxDepth">The maximum search depth (default 6).</param>
+public class EnhancedNegamaxPlayer(string name, int maxDepth = 6) : IPlayer
 {
-    private readonly NegamaxEngine algorithm;
+    private readonly NegamaxEngine engine = new NegamaxEngine(new ConnectFourPositionEvaluator(), maxDepth);
 
     /// <inheritdoc/>
-    public string Name { get; }
+    public string PlayerName { get; } = name ?? throw new ArgumentNullException(nameof(name));
 
-    /// <summary>
-    /// Creates a new Enhanced Negamax player.
-    /// </summary>
-    /// <param name="name">The display name for the player.</param>
-    /// <param name="maxDepth">The maximum search depth (default 6).</param>
-    public EnhancedNegamaxPlayer(string name, int maxDepth = 6)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        algorithm = new NegamaxEngine(new ConnectFourPositionEvaluator(), maxDepth);
-    }
+    /// <inheritdoc/>
+    public string AlgorithmName => $"Negamax enhanced ({engine.MaxDepth}, Heuristic1)";
 
     /// <inheritdoc/>
     public int ChooseMove(GameBoard board, CellState player)
     {
-        return algorithm.FindBestMove(board, player);
+        return engine.FindBestMove(board, player);
     }
 }

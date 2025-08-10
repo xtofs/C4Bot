@@ -43,16 +43,19 @@ This analysis evaluates different AI algorithms for Connect Four through compreh
 ### 3. Algorithm Comparison Insights
 
 **MCTS Dominance:**
+
 - MCTS-1000 defeats all Negamax variants decisively (86.5% - 98.5% win rates)
 - Simulation-based approach superior to traditional tree search for Connect Four
 - Perfect record against random play (100% win rate)
 
 **Negamax Depth Paradox:**
+
 - Negamax-3 outperforms deeper variants in overall tournament ranking
 - Deeper search doesn't always translate to better overall performance
 - Potential issues: evaluation function limitations, time constraints, or overfitting
 
 **Head-to-Head Matrix Patterns:**
+
 - Negamax variants show mostly 50-50 performance against each other (except depth 3)
 - Depth 3 shows anomalous behavior: dominates some deeper variants completely
 - Suggests potential implementation issues or algorithmic artifacts at certain depths
@@ -68,17 +71,20 @@ This analysis evaluates different AI algorithms for Connect Four through compreh
 
 ## Strategic Recommendations
 
-### For Competitive Play:
+### For Competitive Play
+
 - **Primary choice**: MCTS-1000 for maximum strength
 - **Balanced option**: Negamax-6 for good performance with minimal computation
 - **Fast option**: Negamax-3 for time-critical scenarios
 
-### For Research:
+### For Research
+
 - **Investigate Negamax-3 anomaly**: Why does shallow search outperform deeper variants?
 - **Evaluation function analysis**: Current Negamax evaluation may be insufficient
 - **MCTS parameter tuning**: Test different simulation counts for optimal performance
 
-### For Educational Purposes:
+### For Educational Purposes
+
 - **Negamax-8**: Demonstrates perfect tactical play against random opponents
 - **Correlation analysis**: Clear example of depth-performance relationships
 - **Algorithm comparison**: Excellent case study for traditional vs modern AI approaches

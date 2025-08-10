@@ -6,27 +6,24 @@ namespace ConnectFour;
 /// A Negamax player with basic evaluation (terminal positions only).
 /// Uses the NegamaxEngine with a BasicPositionEvaluator.
 /// </summary>
-public class NegamaxPlayer : IPlayer
+/// <remarks>
+/// Creates a new Negamax player with basic evaluation.
+/// </remarks>
+/// <param name="name">The display name for the player.</param>
+/// <param name="maxDepth">The maximum search depth (default 6).</param>
+public class NegamaxPlayer(string name, int maxDepth) : IPlayer
 {
-    private readonly NegamaxEngine algorithm;
+    private readonly NegamaxEngine engine = new NegamaxEngine(new BasicPositionEvaluator(), maxDepth);
 
     /// <inheritdoc/>
-    public string Name { get; }
+    public string PlayerName { get; } = name ?? throw new ArgumentNullException(nameof(name));
 
-    /// <summary>
-    /// Creates a new Negamax player with basic evaluation.
-    /// </summary>
-    /// <param name="name">The display name for the player.</param>
-    /// <param name="maxDepth">The maximum search depth (default 6).</param>
-    public NegamaxPlayer(string name, int maxDepth = 6)
-    {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        algorithm = new NegamaxEngine(new BasicPositionEvaluator(), maxDepth);
-    }
+    /// <inheritdoc/>
+    public string AlgorithmName => $"Negamax ({engine.MaxDepth})";
 
     /// <inheritdoc/>
     public int ChooseMove(GameBoard board, CellState player)
     {
-        return algorithm.FindBestMove(board, player);
+        return engine.FindBestMove(board, player);
     }
 }

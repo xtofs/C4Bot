@@ -19,7 +19,7 @@ public static class GameRunner
             var turn = board.HalfTurn % 2 == 0 ? 0 : 1;
             var player = turn == 0 ? playerX : playerO;
             var state = turn == 0 ? CellState.X : CellState.O;
-            Console.WriteLine($"{player.Name} ({player.GetType().Name}) to move ({(state == CellState.X ? "X" : "O")})");
+            Console.WriteLine($"{player.PlayerName} ({player.GetType().Name}) to move ({(state == CellState.X ? "X" : "O")})");
             int move = player.ChooseMove(board, state);
             board = board.ApplyMove(move, state);
             if (board.HasGameEnded(out var result, out var winningCells))
@@ -27,7 +27,7 @@ public static class GameRunner
                 if (result == GameResult.WinX || result == GameResult.WinO)
                 {
                     PrintBoard(board, winningCells);
-                    Console.WriteLine($"{player.Name} wins!");
+                    Console.WriteLine($"{player.PlayerName} wins!");
                 }
                 else if (result == GameResult.Draw)
                 {

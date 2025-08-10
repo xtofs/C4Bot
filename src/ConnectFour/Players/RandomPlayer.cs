@@ -9,7 +9,10 @@ namespace ConnectFour;
 public class RandomPlayer : IPlayer
 {
     /// <inheritdoc/>
-    public string Name { get; }
+    public string PlayerName { get; }
+
+    public string AlgorithmName => "Random";
+
     private readonly Random _random;
 
     /// <summary>
@@ -18,7 +21,7 @@ public class RandomPlayer : IPlayer
     /// <param name="name">The display name for the player.</param>
     public RandomPlayer(string name)
     {
-        Name = name;
+        PlayerName = name;
         _random = new Random();
     }
 

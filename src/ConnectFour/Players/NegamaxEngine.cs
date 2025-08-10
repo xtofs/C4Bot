@@ -8,7 +8,8 @@ namespace ConnectFour;
 public class NegamaxEngine
 {
     private readonly IPositionEvaluator evaluator;
-    private readonly int maxDepth;
+
+    public int MaxDepth { get; }
 
     /// <summary>
     /// Creates a new Negamax algorithm with the specified evaluator and search depth.
@@ -18,7 +19,7 @@ public class NegamaxEngine
     public NegamaxEngine(IPositionEvaluator evaluator, int maxDepth)
     {
         this.evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-        this.maxDepth = maxDepth;
+        this.MaxDepth = maxDepth;
     }
 
     /// <summary>
@@ -35,7 +36,7 @@ public class NegamaxEngine
         foreach (var move in board.GetAvailableMoves())
         {
             var newBoard = board.ApplyMove(move, player);
-            var score = -Negamax(newBoard, Opponent(player), maxDepth - 1, int.MinValue, int.MaxValue, player);
+            var score = -Negamax(newBoard, Opponent(player), MaxDepth - 1, int.MinValue, int.MaxValue, player);
             if (score > bestScore)
             {
                 bestScore = score;

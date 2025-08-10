@@ -18,7 +18,7 @@ var players = new List<IPlayer>
     new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),
 };
 
-Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.Name))}");
+Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.PlayerName))}");
 Console.WriteLine($"Games per match: {gamesPerMatch}");
 Console.WriteLine();
 
