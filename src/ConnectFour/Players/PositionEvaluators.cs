@@ -1,6 +1,4 @@
-using System;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// Interface for position evaluation strategies.

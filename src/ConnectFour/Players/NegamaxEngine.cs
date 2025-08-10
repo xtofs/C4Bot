@@ -1,6 +1,4 @@
-using System;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// The core Negamax algorithm with alpha-beta pruning, parameterized by search depth and position evaluator.

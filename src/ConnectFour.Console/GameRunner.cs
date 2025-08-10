@@ -78,15 +78,15 @@ public static class GameRunner
                 
                 if (winningCells != null && winningCells.Contains((row, col)))
                 {
-                    // Highlight winning cells in orange
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    // Highlight winning cells in green
+                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write($"{c} ");
                     Console.ResetColor();
                 }
                 else if (lastMove.HasValue && lastMove.Value.row == row && lastMove.Value.col == col)
                 {
-                    // Highlight last move in green
-                    Console.ForegroundColor = ConsoleColor.Green;
+                    // Highlight last move in orange
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
                     Console.Write($"{c} ");
                     Console.ResetColor();
                 }

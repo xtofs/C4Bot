@@ -1,6 +1,4 @@
-using System;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// A player that prompts a human for input via the console.

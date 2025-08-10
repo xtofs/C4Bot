@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// A player that uses Monte Carlo Tree Search (MCTS) to select moves.

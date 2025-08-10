@@ -1,6 +1,4 @@
-using System;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// A Negamax player with enhanced position evaluation using Connect Four-specific heuristics.

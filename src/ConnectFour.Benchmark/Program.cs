@@ -1,5 +1,5 @@
 using ConnectFour.Benchmark;
-using ConnectFour;
+using ConnectFour.Players;
 
 Console.WriteLine("Connect Four AI Tournament");
 Console.WriteLine("==========================");

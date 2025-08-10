@@ -1,7 +1,7 @@
-using System.Diagnostics;
-using ConnectFour;
-
 namespace ConnectFour.Benchmark;
+
+using ConnectFour;
+using ConnectFour.Players;
 
 /// <summary>
 /// Manages tournaments between AI players and collects statistics.

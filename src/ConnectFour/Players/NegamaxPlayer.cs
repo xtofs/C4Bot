@@ -1,6 +1,4 @@
-using System;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// A Negamax player with basic evaluation (terminal positions only).

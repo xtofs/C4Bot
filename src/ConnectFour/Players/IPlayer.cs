@@ -1,4 +1,4 @@
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// Represents a Connect Four player.

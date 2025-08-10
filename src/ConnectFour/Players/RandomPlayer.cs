@@ -1,7 +1,4 @@
-using System;
-using System.Linq;
-
-namespace ConnectFour;
+namespace ConnectFour.Players;
 
 /// <summary>
 /// A player that selects moves randomly from available columns.
