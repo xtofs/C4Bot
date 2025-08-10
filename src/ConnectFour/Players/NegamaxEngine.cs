@@ -5,7 +5,7 @@ namespace ConnectFour;
 /// <summary>
 /// The core Negamax algorithm with alpha-beta pruning, parameterized by search depth and position evaluator.
 /// </summary>
-public class NegamaxAlgorithm
+public class NegamaxEngine
 {
     private readonly IPositionEvaluator evaluator;
     private readonly int maxDepth;
@@ -15,7 +15,7 @@ public class NegamaxAlgorithm
     /// </summary>
     /// <param name="evaluator">The position evaluator to use for leaf positions.</param>
     /// <param name="maxDepth">The maximum search depth.</param>
-    public NegamaxAlgorithm(IPositionEvaluator evaluator, int maxDepth)
+    public NegamaxEngine(IPositionEvaluator evaluator, int maxDepth)
     {
         this.evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
         this.maxDepth = maxDepth;

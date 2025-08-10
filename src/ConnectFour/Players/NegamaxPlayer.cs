@@ -4,11 +4,11 @@ namespace ConnectFour;
 
 /// <summary>
 /// A Negamax player with basic evaluation (terminal positions only).
-/// Uses the NegamaxAlgorithm with a BasicPositionEvaluator.
+/// Uses the NegamaxEngine with a BasicPositionEvaluator.
 /// </summary>
 public class NegamaxPlayer : IPlayer
 {
-    private readonly NegamaxAlgorithm algorithm;
+    private readonly NegamaxEngine algorithm;
 
     /// <inheritdoc/>
     public string Name { get; }
@@ -21,7 +21,7 @@ public class NegamaxPlayer : IPlayer
     public NegamaxPlayer(string name, int maxDepth = 6)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
-        algorithm = new NegamaxAlgorithm(new BasicPositionEvaluator(), maxDepth);
+        algorithm = new NegamaxEngine(new BasicPositionEvaluator(), maxDepth);
     }
 
     /// <inheritdoc/>
