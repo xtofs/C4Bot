@@ -264,12 +264,12 @@ public class Tournament
             {
                 if (rowPlayer == colPlayer)
                 {                    
-                    Console.Write(" |    -   ");
+                    Console.Write(" |    -    ");
                 }
                 else if (matchLookup.TryGetValue((rowPlayer, colPlayer), out var match))
                 {
                     var winRate = match.Player1WinRate;
-                    Console.Write($" | {winRate,8:P1}");
+                    Console.Write($" | {winRate,7:P1}");
                 }
                 else
                 {
