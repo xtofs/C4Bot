@@ -1,4 +1,5 @@
 using ConnectFour;
+using ConnectFour.Players;
 
 namespace ConnectFour.ConsoleApp;
 

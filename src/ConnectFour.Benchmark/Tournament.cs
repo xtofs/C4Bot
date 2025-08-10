@@ -14,18 +14,26 @@ public class Tournament
     /// <param name="players">The players to compete.</param>
     /// <param name="gamesPerMatch">Number of games each pair should play.</param>
     /// <returns>Results for each matchup.</returns>
-    public static async Task<List<MatchResult>> RunTournamentAsync(IList<IPlayer> players, int gamesPerMatch)
+    public static List<MatchResult> RunTournament(IList<IPlayer> players, int gamesPerMatch)
     {
         var results = new List<MatchResult>();
         
+        // Calculate total number of pairings: n * (n-1) / 2
+        var totalPairings = players.Count * (players.Count - 1) / 2;
+        
         Console.WriteLine($"Starting tournament with {players.Count} players, {gamesPerMatch} games per match");
+        Console.WriteLine($"Total pairings: {totalPairings}");
         Console.WriteLine();
 
-        for (int i = 0; i < players.Count; i++)
+        var currentPairing = 0;
+        for (var i = 0; i < players.Count; i++)
         {
-            for (int j = i + 1; j < players.Count; j++)
+            for (var j = i + 1; j < players.Count; j++)
             {
-                var result = await RunMatchAsync(players[i], players[j], gamesPerMatch);
+                currentPairing++;
+                Console.Write($"Pairing {currentPairing}/{totalPairings}: {players[i].PlayerName} vs {players[j].PlayerName} - ");
+                
+                var result = RunMatch(players[i], players[j], gamesPerMatch);
                 results.Add(result);
                 
                 PrintMatchResult(result);
@@ -39,16 +47,12 @@ public class Tournament
     /// <summary>
     /// Runs a match between two players for the specified number of games.
     /// </summary>
-    private static async Task<MatchResult> RunMatchAsync(IPlayer player1, IPlayer player2, int gameCount)
+    private static MatchResult RunMatch(IPlayer player1, IPlayer player2, int gameCount)
     {
-        await Task.CompletedTask;
-
         int player1Wins = 0, player2Wins = 0, draws = 0;
         var totalTime = TimeSpan.Zero;
 
-        Console.Write($"Match: {player1.PlayerName} vs {player2.PlayerName} - ");
-
-        for (int game = 0; game < gameCount; game++)
+        for (var game = 0; game < gameCount; game++)
         {
             // Alternate who goes first
             var (p1, p2) = game % 2 == 0 ? (player1, player2) : (player2, player1);
@@ -117,9 +121,9 @@ public class Tournament
             var move = player.ChooseMove(board, currentPlayer);
             
             // Validate the move is valid
-            board.GetAvailableMoves(availableMoves, out int availableCount);
-            bool isValidMove = false;
-            for (int i = 0; i < availableCount; i++)
+            board.GetAvailableMoves(availableMoves, out var availableCount);
+            var isValidMove = false;
+            for (var i = 0; i < availableCount; i++)
             {
                 if (availableMoves[i] == move)
                 {
@@ -174,7 +178,7 @@ public class Tournament
             .ToList();
 
         // Calculate overall statistics for each player
-        var playerStats = players.ToDictionary(p => p, p => new { Wins = 0, Losses = 0, Draws = 0, TotalGames = 0 });
+        var playerStats = players.ToDictionary(p => p, p => new { Wins = 0, Losses = 0, Draws = 0, TotalGames = 0, TotalTime = TimeSpan.Zero });
 
         foreach (var result in results)
         {
@@ -186,7 +190,8 @@ public class Tournament
                 Wins = p1Stats.Wins + result.Player1Wins,
                 Losses = p1Stats.Losses + result.Player2Wins, 
                 Draws = p1Stats.Draws + result.Draws,
-                TotalGames = p1Stats.TotalGames + result.TotalGames
+                TotalGames = p1Stats.TotalGames + result.TotalGames,
+                TotalTime = p1Stats.TotalTime + result.TotalTime
             };
             
             playerStats[result.Player2Name] = new
@@ -194,34 +199,50 @@ public class Tournament
                 Wins = p2Stats.Wins + result.Player2Wins,
                 Losses = p2Stats.Losses + result.Player1Wins,
                 Draws = p2Stats.Draws + result.Draws, 
-                TotalGames = p2Stats.TotalGames + result.TotalGames
+                TotalGames = p2Stats.TotalGames + result.TotalGames,
+                TotalTime = p2Stats.TotalTime + result.TotalTime
             };
         }
 
         // Print overall standings
-        Console.WriteLine("Overall Standings:");
-        Console.WriteLine("Player                    | Wins | Losses | Draws | Win Rate");
-        Console.WriteLine("--------------------------|------|--------|-------|----------");
+        var tableData = players
+            .OrderByDescending(p => (double)playerStats[p].Wins / playerStats[p].TotalGames)
+            .Select(player =>
+            {
+                var stats = playerStats[player];
+                var winRate = (double)stats.Wins / stats.TotalGames;
+                return new object[] { player, stats.Wins, stats.Losses, stats.Draws, winRate };
+            })
+            .ToList();
+
+        PrintTable("Overall Standings:", 
+            new[] { "Player", "Wins", "Losses", "Draws", "Win Rate" },
+            new[] { 25, 4, 6, 5, 7 },
+            new[] { "left", "right", "right", "right", "percent" },
+            tableData);
+
+        Console.WriteLine();
+
+        // Print performance metrics
+        var performanceData = players
+            .OrderBy(p => playerStats[p].TotalGames > 0 ? playerStats[p].TotalTime.TotalMilliseconds / playerStats[p].TotalGames : double.MaxValue)
+            .Select(player =>
+            {
+                var stats = playerStats[player];
+                var avgTimePerGame = stats.TotalGames > 0 ? stats.TotalTime.TotalMilliseconds / stats.TotalGames : 0.0;
+                var totalTimeSeconds = stats.TotalTime.TotalSeconds;
+                return new object[] { player, stats.TotalGames, totalTimeSeconds, avgTimePerGame };
+            })
+            .ToList();
+
+        PrintTable("Performance Metrics (Speed Rankings):", 
+            new[] { "Player", "Games", "Total Time", "Avg/Game" },
+            new[] { 25, 5, 10, 8 },
+            new[] { "left", "right", "time", "time_ms" },
+            performanceData);
+
+        Console.WriteLine();
         
-        foreach (var player in players.OrderByDescending(p => (double)playerStats[p].Wins / playerStats[p].TotalGames))
-        {
-            var stats = playerStats[player];
-            var winRate = (double)stats.Wins / stats.TotalGames;
-            Console.WriteLine($"{player,-25} | {stats.Wins,4} | {stats.Losses,6} | {stats.Draws,5} | {winRate,7:P1}");
-        }
-
-        Console.WriteLine();
-        PrintHeadToHeadMatrix(results, players);
-    }
-
-    /// <summary>
-    /// Prints a head-to-head matrix showing win rates between all player pairs.
-    /// </summary>
-    private static void PrintHeadToHeadMatrix(List<MatchResult> results, List<string> players)
-    {
-        Console.WriteLine("Head-to-Head Win Rate Matrix (Row vs Column):");
-        Console.WriteLine();
-
         // Create a lookup for match results
         var matchLookup = new Dictionary<(string, string), MatchResult>();
         foreach (var result in results)
@@ -239,42 +260,105 @@ public class Tournament
             );
         }
 
+        PrintMatrix("Head-to-Head Win Rate Matrix (Row vs Column):", players, players, matchLookup, 8);
+    }
+
+    /// <summary>
+    /// Prints a formatted table with headers, data, and customizable column formatting.
+    /// </summary>
+    private static void PrintTable(string title, string[] headers, int[] columnWidths, string[] alignments, List<object[]> data)
+    {
+        Console.WriteLine(title);
+        
+        // Print header
+        for (var i = 0; i < headers.Length; i++)
+        {
+            var separator = i > 0 ? " | " : "";
+            var header = alignments[i] == "left" 
+                ? headers[i].PadRight(columnWidths[i]) 
+                : headers[i].PadLeft(columnWidths[i]);
+            Console.Write($"{separator}{header}");
+        }
+        Console.WriteLine();
+
+        // Print separator
+        for (var i = 0; i < headers.Length; i++)
+        {
+            var separator = i > 0 ? " | " : "";
+            Console.Write($"{separator}{new string('-', columnWidths[i])}");
+        }
+        Console.WriteLine();
+
+        // Print data rows
+        foreach (var row in data)
+        {
+            for (var i = 0; i < row.Length; i++)
+            {
+                var separator = i > 0 ? " | " : "";
+                var value = row[i];
+                string formattedValue = alignments[i] switch
+                {
+                    "percent" when value is double d => d.ToString("P1"),
+                    "time" when value is double d => $"{d:F1}s",
+                    "time_ms" when value is double d => $"{d:F0}ms",
+                    _ => value?.ToString() ?? ""
+                };
+                var alignedValue = alignments[i] == "left" 
+                    ? formattedValue.PadRight(columnWidths[i]) 
+                    : formattedValue.PadLeft(columnWidths[i]);
+                Console.Write($"{separator}{alignedValue}");
+            }
+            Console.WriteLine();
+        }
+    }
+
+    /// <summary>
+    /// Prints a formatted matrix with row and column headers.
+    /// </summary>
+    private static void PrintMatrix(string title, List<string> rowHeaders, List<string> columnHeaders, Dictionary<(string, string), MatchResult> matchData, int cellWidth)
+    {
+        Console.WriteLine(title);
+        Console.WriteLine();
+
         // Print header
         Console.Write("Player".PadRight(15));
-        foreach (var colPlayer in players)
+        foreach (var colHeader in columnHeaders)
         {
-            Console.Write($" | {colPlayer[..Math.Min(8, colPlayer.Length)],8}");
+            var truncatedHeader = colHeader[..Math.Min(cellWidth, colHeader.Length)];
+            Console.Write($" | {truncatedHeader.PadLeft(cellWidth)}");
         }
         Console.WriteLine();
 
         // Print separator
         Console.Write("".PadRight(15, '-'));
-        foreach (var _ in players)
+        foreach (var _ in columnHeaders)
         {
-            Console.Write(" | --------");
+            Console.Write($" | {new string('-', cellWidth)}");
         }
         Console.WriteLine();
 
         // Print matrix rows
-        foreach (var rowPlayer in players)
+        foreach (var rowHeader in rowHeaders)
         {
-            Console.Write($"{rowPlayer[..Math.Min(15, rowPlayer.Length)],-15}");
+            Console.Write($"{rowHeader[..Math.Min(15, rowHeader.Length)],-15}");
             
-            foreach (var colPlayer in players)
+            foreach (var colHeader in columnHeaders)
             {
-                if (rowPlayer == colPlayer)
-                {                    
-                    Console.Write(" |    -    ");
-                }
-                else if (matchLookup.TryGetValue((rowPlayer, colPlayer), out var match))
+                string cellValue;
+                if (rowHeader == colHeader)
                 {
-                    var winRate = match.Player1WinRate;
-                    Console.Write($" | {winRate,7:P1}");
+                    cellValue = "    -   ";
+                }
+                else if (matchData.TryGetValue((rowHeader, colHeader), out var match))
+                {
+                    cellValue = $"{match.Player1WinRate:P1}";
                 }
                 else
                 {
-                    Console.Write(" |   N/A   ");
+                    cellValue = "  N/A   ";
                 }
+                
+                Console.Write($" | {cellValue.PadLeft(cellWidth)}");
             }
             Console.WriteLine();
         }

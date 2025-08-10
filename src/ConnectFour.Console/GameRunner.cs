@@ -1,5 +1,7 @@
 namespace ConnectFour;
 
+using ConnectFour.Players;
+
 /// <summary>
 /// Provides the main game loop and board printing for Connect Four.
 /// </summary>
@@ -18,7 +20,7 @@ public static class GameRunner
         while (true)
         {
             PrintBoard(board, lastMove);
-            var turn = board.HalfTurn % 2 == 0 ? 0 : 1;
+            var turn = board.HalfMoveCount % 2 == 0 ? 0 : 1;
             var player = turn == 0 ? playerX : playerO;
             var state = turn == 0 ? CellState.X : CellState.O;
             

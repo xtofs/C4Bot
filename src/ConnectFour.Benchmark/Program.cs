@@ -1,34 +1,37 @@
 using ConnectFour.Benchmark;
 using ConnectFour.Players;
 
-Console.WriteLine("Connect Four AI Tournament");
-Console.WriteLine("==========================");
-Console.WriteLine();
-
-// Configure tournament parameters
-const int gamesPerMatch = 50; // Reduced for quicker testing
-const int mctsSimulations = 1000; // Simulations for MCTS
-
-// Create AI players - clean algorithm implementations
-var players = new List<IPlayer>
+internal class Program
 {
-    new RandomPlayer("Random"),
-    new NegamaxPlayer("Negamax-6", 6),                    // Basic evaluation (terminal only)
-    new NegamaxWithHeuristicPlayer("EnhancedNegamax-6", 6),    // Smart evaluation with heuristics
-    new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),
-};
+    private static void Main(string[] args)
+    {
+        Console.WriteLine("Connect Four Tournament");
+        Console.WriteLine("=======================");
+        Console.WriteLine();
 
-Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.PlayerName))}");
-Console.WriteLine($"Games per match: {gamesPerMatch}");
-Console.WriteLine();
+        // Configure tournament parameters
+        var gamesPerMatch = int.TryParse(args[0], out var result) ? result : 100;
 
-// Run the tournament
-var tournament = new Tournament();
-var results = await Tournament.RunTournamentAsync(players, gamesPerMatch);
+        var players = new IPlayer[]
+        {
+            new RandomPlayer("Random"),
+            new NegamaxPlayer("Negamax-6", 6),                         // Basic evaluation 
+            new NegamaxWithHeuristicPlayer("EnhancedNegamax-6", 6),    // Evaluation with heuristics
+            new MonteCarloTreeSearchPlayer("MonteCarlo-1000", 1000),
+        };
 
-// Print final summary
-Console.WriteLine();
-Tournament.PrintTournamentSummary(results);
+        Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.PlayerName))}");
+        Console.WriteLine($"Games per match: {gamesPerMatch}");
+        Console.WriteLine();
 
-Console.WriteLine();
-Console.WriteLine("Tournament complete!");
+        // Run the tournament
+        var results = Tournament.RunTournament(players, gamesPerMatch);
+
+        // Print final summary
+        Console.WriteLine();
+        Tournament.PrintTournamentSummary(results);
+
+        Console.WriteLine();
+        Console.WriteLine("Tournament complete!");
+    }
+}

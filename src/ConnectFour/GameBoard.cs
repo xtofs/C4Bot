@@ -143,7 +143,11 @@ public sealed class GameBoard
         }
     }
 
-    public int HalfTurn => BitOperations.PopCount(x | o);
+    /// <summary>
+    /// Gets the total number of moves (pieces) that have been played on the board.
+    /// Each move by either player counts as one half-move in chess terminology.
+    /// </summary>
+    public int HalfMoveCount => BitOperations.PopCount(x | o);
 
     /// <summary>
     /// Checks if the game has ended (win or draw) and provides the result and winning cells if applicable.
