@@ -17,14 +17,14 @@ public interface IPositionEvaluator
 }
 
 /// <summary>
-/// Basic evaluator that only considers terminal positions (wins/losses/draws).
-/// Returns 0 for non-terminal positions.
+/// Basic evaluator that provides no static evaluation of positions.
+/// Always returns 0, relying solely on the search tree to find terminal positions.
 /// </summary>
 public class BasicPositionEvaluator : IPositionEvaluator
 {
     public int Evaluate(GameBoard board, CellState player)
     {
-        return 0; // No static evaluation - only terminal positions matter
+        return 0; // No static evaluation - purely tree-search based
     }
 }
 

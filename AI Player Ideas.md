@@ -5,6 +5,7 @@ This document outlines various approaches for creating new automated players bas
 ## Current State Analysis
 
 Based on our tournament results, we identified several key insights:
+
 - **MCTS dominance**: 95.3% overall win rate, excels at positional understanding
 - **Negamax-3 anomaly**: 61.1% win rate despite shallow depth suggests evaluation function limitations
 - **Depth threshold**: Strong correlation (-0.92) between search depth and tactical robustness
@@ -17,6 +18,7 @@ Based on our tournament results, we identified several key insights:
 **Concept**: The current Negamax only evaluates terminal positions (win/loss/draw = ±10000/0). Adding positional evaluation could dramatically improve performance.
 
 **Implementation**:
+
 ```csharp
 public class EvaluatedNegamaxPlayer : IPlayer
 {
@@ -41,6 +43,7 @@ public class EvaluatedNegamaxPlayer : IPlayer
 **Rationale**: Our Negamax-3 anomaly suggests the evaluation function is the bottleneck, not search depth. Connect Four has well-known positional principles that could be encoded.
 
 **Evaluation Components**:
+
 - **Center control** (columns 3-4 are most valuable)
 - **Threat detection** (count 3-in-a-rows)
 - **Blocking priorities** (defend before attack)
@@ -51,6 +54,7 @@ public class EvaluatedNegamaxPlayer : IPlayer
 **Concept**: Use different algorithms for different game phases, leveraging the strengths of each approach.
 
 **Implementation**:
+
 ```csharp
 public class HybridPlayer : IPlayer
 {
@@ -74,6 +78,7 @@ public class HybridPlayer : IPlayer
 **Rationale**: MCTS excels at positional play and long-term planning, while deep Negamax (depth 8) is tactically perfect. Combining both could leverage their respective strengths.
 
 **Phase Definitions**:
+
 - **Opening** (moves 1-14): Positional foundation, pattern recognition
 - **Endgame** (moves 15+): Tactical calculation, threat resolution
 
@@ -82,6 +87,7 @@ public class HybridPlayer : IPlayer
 **Concept**: Run multiple algorithms and use voting or confidence metrics to select the best move.
 
 **Implementation**:
+
 ```csharp
 public class EnsemblePlayer : IPlayer
 {
@@ -110,11 +116,13 @@ public class EnsemblePlayer : IPlayer
 ```
 
 **Advantages**:
+
 - **Robustness**: Reduces individual algorithm weaknesses
 - **Adaptability**: Different algorithms can handle different position types
 - **Consensus**: Multiple perspectives on position evaluation
 
 **Weighting Strategies**:
+
 - Time-based (favor faster algorithms under time pressure)
 - Position-based (favor tactical vs positional specialists)
 - Historical performance-based
@@ -124,6 +132,7 @@ public class EnsemblePlayer : IPlayer
 **Concept**: Adaptive depth based on position complexity and available computation time.
 
 **Implementation**:
+
 ```csharp
 public class AdaptiveNegamaxPlayer : IPlayer
 {
@@ -146,6 +155,7 @@ public class AdaptiveNegamaxPlayer : IPlayer
 ```
 
 **Complexity Indicators**:
+
 - **Move count**: Fewer available moves = more critical
 - **Threat density**: Multiple threats require deeper analysis
 - **Material balance**: Endgame positions need precise calculation
@@ -155,6 +165,7 @@ public class AdaptiveNegamaxPlayer : IPlayer
 **Concept**: A pattern-recognition approach using position encoding and learned responses.
 
 **Implementation**:
+
 ```csharp
 public class PatternPlayer : IPlayer
 {
@@ -177,6 +188,7 @@ public class PatternPlayer : IPlayer
 ```
 
 **Learning Sources**:
+
 - **Self-play**: Generate training data from strong players
 - **Expert games**: Learn from human expert play
 - **MCTS analysis**: Extract patterns from successful MCTS decisions
@@ -186,6 +198,7 @@ public class PatternPlayer : IPlayer
 **Concept**: Deep learning approach with position evaluation and move prediction.
 
 **Architecture**:
+
 - **Input**: Board state as 6x7x3 tensor (empty/player1/player2)
 - **Hidden**: Convolutional layers for pattern recognition
 - **Output**: Move probabilities + position evaluation
@@ -205,6 +218,7 @@ Based on our analysis, the recommended implementation order:
 ## Research Questions
 
 Each approach addresses different research questions:
+
 - **Enhanced Negamax**: Can better evaluation bridge the MCTS gap?
 - **Hybrid**: Can algorithm specialization outperform generalists?
 - **Ensemble**: Do multiple perspectives improve decision quality?
