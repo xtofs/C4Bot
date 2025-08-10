@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="src\ConnectFour\ConnectFour.csproj" />
     <Project Path="src\ConnectFour.Console\ConnectFour.Console.csproj" />
+    <Project Path="src\ConnectFour.Benchmark\ConnectFour.Benchmark.csproj" />
   </Folder>
 </Solution>
