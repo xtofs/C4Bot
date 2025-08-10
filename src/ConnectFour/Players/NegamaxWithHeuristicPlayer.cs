@@ -4,21 +4,21 @@ namespace ConnectFour;
 
 /// <summary>
 /// A Negamax player with enhanced position evaluation using Connect Four-specific heuristics.
-/// Uses the NegamaxEngine with a ConnectFourPositionEvaluator.
-/// The heuristics provide:
-///   Center column preference (columns 3-4 most valuable)
-///   Threat detection (3-in-a-row patterns worth 50 points)
-///   Defensive prioritization (blocking threats worth 60 points)
-///   Two-in-a-row building (foundation patterns worth 2 points)
+/// Uses the ConnectFourPositionEvaluator if no custom evaluator is provided.
+
 /// </summary>
 /// <remarks>
-/// Creates a new Enhanced Negamax player.
+/// Creates a Negamax player with heuristics.
 /// </remarks>
 /// <param name="name">The display name for the player.</param>
 /// <param name="maxDepth">The maximum search depth (default 6).</param>
-public class EnhancedNegamaxPlayer(string name, int maxDepth = 6) : IPlayer
+public class NegamaxWithHeuristicPlayer(string name, int maxDepth, IPositionEvaluator evaluator) : IPlayer
 {
-    private readonly NegamaxEngine engine = new NegamaxEngine(new ConnectFourPositionEvaluator(), maxDepth);
+    public NegamaxWithHeuristicPlayer(string name, int maxDepth) : this (name, maxDepth, new ConnectFourPositionEvaluator())
+    {
+    }
+
+    private readonly NegamaxEngine engine = new NegamaxEngine(evaluator, maxDepth);
 
     /// <inheritdoc/>
     public string PlayerName { get; } = name ?? throw new ArgumentNullException(nameof(name));

@@ -14,7 +14,7 @@ var players = new List<IPlayer>
 {
     new RandomPlayer("Random"),
     new NegamaxPlayer("Negamax-6", 6),                    // Basic evaluation (terminal only)
-    new EnhancedNegamaxPlayer("EnhancedNegamax-6", 6),    // Smart evaluation with heuristics
+    new NegamaxWithHeuristicPlayer("EnhancedNegamax-6", 6),    // Smart evaluation with heuristics
     new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),
 };
 

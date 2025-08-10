@@ -30,6 +30,11 @@ public class BasicPositionEvaluator : IPositionEvaluator
 
 /// <summary>
 /// Enhanced evaluator with Connect Four-specific heuristics.
+/// The heuristics provide:
+///   Center column preference (columns 3-4 most valuable)
+///   Threat detection (3-in-a-row patterns worth 50 points)
+///   Defensive prioritization (blocking threats worth 60 points)
+///   Two-in-a-row building (foundation patterns worth 2 points)
 /// </summary>
 public class ConnectFourPositionEvaluator : IPositionEvaluator
 {
