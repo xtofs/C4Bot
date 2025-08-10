@@ -22,8 +22,11 @@ public class HumanPlayer : IPlayer
         while (true)
         {
             Console.Write($"{Name}, enter column (1-{GameBoard.Columns}): ");
-            if (int.TryParse(Console.ReadLine(), out int col) && col >= 1 && col <= GameBoard.Columns && !board.IsColumnFull(col - 1))
+            if (int.TryParse(Console.ReadLine(), out var col) && col >= 1 && col <= GameBoard.Columns && !board.IsColumnFull(col - 1))
+            {
                 return col - 1;
+            }
+
             Console.WriteLine("Invalid move. Try again.");
         }
     }

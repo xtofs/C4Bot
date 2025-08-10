@@ -88,6 +88,9 @@ public class Tournament
                 case GameResult.Draw:
                     draws++;
                     break;
+                case GameResult.Ongoing:
+                    // unreachable                    
+                    break;
             }
 
             // Progress indicator

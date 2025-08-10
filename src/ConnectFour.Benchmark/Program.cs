@@ -15,8 +15,10 @@ var players = new List<IPlayer>
     new RandomPlayer("Random"),
     new NegamaxPlayer("Negamax-3", 3),   // Anomaly: surprisingly strong for shallow depth
     new NegamaxPlayer("Negamax-6", 6),   // Standard reference depth
+    new EvaluatedNegamaxPlayer("EnhancedNegamax-4", 4), // Enhanced with static evaluation
+    new EvaluatedNegamaxPlayer("EnhancedNegamax-6", 6), // Enhanced with static evaluation
     new NegamaxPlayer("Negamax-8", 8),   // Perfect vs random, demonstrates tactical completeness
-    new MonteCarloTreeSearchPlayer("MCTS-1000", mctsSimulations),  // Champion
+    new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),  // Champion
 };
 
 Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.Name))}");

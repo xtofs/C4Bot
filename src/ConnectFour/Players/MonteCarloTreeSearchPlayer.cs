@@ -13,7 +13,7 @@ public class MonteCarloTreeSearchPlayer : IPlayer
     private readonly int simulations;
 
     /// <summary>
-    /// Creates a new MCTS player with the given name and number of simulations.
+    /// Creates a new Monte Carlo Tree Search (MCTS) player with the given name and number of simulations.
     /// </summary>
     /// <param name="name">The display name for the player.</param>
     /// <param name="simulations">The number of simulations to run (default 1000).</param>
