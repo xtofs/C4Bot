@@ -15,9 +15,10 @@ internal class Program
         var players = new IPlayer[]
         {
             new RandomPlayer("Random"),
-            new NegamaxPlayer("Negamax-6", 6),                         // Basic evaluation 
-            new NegamaxWithHeuristicPlayer("EnhancedNegamax-6", 6),    // Evaluation with heuristics
-            new MonteCarloTreeSearchPlayer("MonteCarlo-1000", 1000),
+            new MonteCarloTreeSearchPlayer("MonteCarlo-1000", 1000),    // MCTS with 1000 simulations
+            new MinimaxPlayer("Minimax-6", 6),                          // Basic evaluation 
+            new MinimaxWithHeuristicPlayer("EnhancedMinimax-6", 6),     // Evaluation with heuristics
+            new HybridPlayer("Hybrid-MCTS/Enhanced", 1000, 6, 14),      // MCTS opening + Enhanced Minimax endgame
         };
 
         Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.PlayerName))}");

@@ -14,8 +14,8 @@ class Program
           ("Console", name => new InteractivePlayer(name)),
           ("Random", name => new RandomPlayer(name)),
           ("MonteCarloTreeSearch (1000)", name => new MonteCarloTreeSearchPlayer(name, 1000)),
-          ("Negamax (6)", name => new NegamaxPlayer(name, 6)),
-          ("EnhancedNegamax (6)", name => new NegamaxWithHeuristicPlayer(name, 6)),
+          ("Minimax (6)", name => new MinimaxPlayer(name, 6)),
+          ("EnhancedMinimax (6)", name => new MinimaxWithHeuristicPlayer(name, 6)),
         ];
 
         IPlayer playerX, playerO;
