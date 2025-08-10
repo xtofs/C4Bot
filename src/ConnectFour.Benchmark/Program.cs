@@ -6,19 +6,16 @@ Console.WriteLine("==========================");
 Console.WriteLine();
 
 // Configure tournament parameters
-const int gamesPerMatch = 200; // Number of games each pair plays - increased for better statistics
+const int gamesPerMatch = 50; // Reduced for quicker testing
 const int mctsSimulations = 1000; // Simulations for MCTS
 
-// Create AI players - simplified set focusing on key insights
+// Create AI players - clean algorithm implementations
 var players = new List<IPlayer>
 {
     new RandomPlayer("Random"),
-    new NegamaxPlayer("Negamax-3", 3),   // Anomaly: surprisingly strong for shallow depth
-    new NegamaxPlayer("Negamax-6", 6),   // Standard reference depth
-    new EvaluatedNegamaxPlayer("EnhancedNegamax-4", 4), // Enhanced with static evaluation
-    new EvaluatedNegamaxPlayer("EnhancedNegamax-6", 6), // Enhanced with static evaluation
-    new NegamaxPlayer("Negamax-8", 8),   // Perfect vs random, demonstrates tactical completeness
-    new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),  // Champion
+    new NegamaxPlayer("Negamax-6", 6),                    // Basic evaluation (terminal only)
+    new EnhancedNegamaxPlayer("EnhancedNegamax-6", 6),    // Smart evaluation with heuristics
+    new MonteCarloTreeSearchPlayer("MonteCarlo-1000", mctsSimulations),
 };
 
 Console.WriteLine($"Players: {string.Join(", ", players.Select(p => p.Name))}");
