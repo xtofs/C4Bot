@@ -4,24 +4,6 @@ using ConnectFour;
 namespace ConnectFour.Benchmark;
 
 /// <summary>
-/// Represents the result of a tournament match between two players.
-/// </summary>
-public record MatchResult(
-    string Player1Name,
-    string Player2Name,
-    int Player1Wins,
-    int Player2Wins,
-    int Draws,
-    int TotalGames,
-    TimeSpan TotalTime)
-{
-    public double Player1WinRate => TotalGames > 0 ? (double)Player1Wins / TotalGames : 0.0;
-    public double Player2WinRate => TotalGames > 0 ? (double)Player2Wins / TotalGames : 0.0;
-    public double DrawRate => TotalGames > 0 ? (double)Draws / TotalGames : 0.0;
-    public TimeSpan AverageGameTime => TotalGames > 0 ? TimeSpan.FromMilliseconds(TotalTime.TotalMilliseconds / TotalGames) : TimeSpan.Zero;
-}
-
-/// <summary>
 /// Manages tournaments between AI players and collects statistics.
 /// </summary>
 public class Tournament
@@ -32,7 +14,7 @@ public class Tournament
     /// <param name="players">The players to compete.</param>
     /// <param name="gamesPerMatch">Number of games each pair should play.</param>
     /// <returns>Results for each matchup.</returns>
-    public async Task<List<MatchResult>> RunTournamentAsync(IList<IPlayer> players, int gamesPerMatch)
+    public static async Task<List<MatchResult>> RunTournamentAsync(IList<IPlayer> players, int gamesPerMatch)
     {
         var results = new List<MatchResult>();
         
@@ -57,8 +39,10 @@ public class Tournament
     /// <summary>
     /// Runs a match between two players for the specified number of games.
     /// </summary>
-    private async Task<MatchResult> RunMatchAsync(IPlayer player1, IPlayer player2, int gameCount)
+    private static async Task<MatchResult> RunMatchAsync(IPlayer player1, IPlayer player2, int gameCount)
     {
+        await Task.CompletedTask;
+
         int player1Wins = 0, player2Wins = 0, draws = 0;
         var totalTime = TimeSpan.Zero;
 
@@ -81,15 +65,21 @@ public class Tournament
                 case GameResult.WinO when game % 2 == 1: // player1 was O
                     player1Wins++;
                     break;
+
                 case GameResult.WinX when game % 2 == 1: // player2 was X
                 case GameResult.WinO when game % 2 == 0: // player2 was O
                     player2Wins++;
                     break;
+
                 case GameResult.Draw:
                     draws++;
                     break;
+
+                // unreachable. added for exhaustive pattern matching
                 case GameResult.Ongoing:
-                    // unreachable                    
+                case GameResult.WinO:
+                case GameResult.WinX:
+                default:                    
                     break;
             }
 
@@ -253,7 +243,7 @@ public class Tournament
         Console.Write("Player".PadRight(15));
         foreach (var colPlayer in players)
         {
-            Console.Write($" | {colPlayer.Substring(0, Math.Min(8, colPlayer.Length)),8}");
+            Console.Write($" | {colPlayer[..Math.Min(8, colPlayer.Length)],8}");
         }
         Console.WriteLine();
 
@@ -268,18 +258,18 @@ public class Tournament
         // Print matrix rows
         foreach (var rowPlayer in players)
         {
-            Console.Write($"{rowPlayer.Substring(0, Math.Min(15, rowPlayer.Length)),-15}");
+            Console.Write($"{rowPlayer[..Math.Min(15, rowPlayer.Length)],-15}");
             
             foreach (var colPlayer in players)
             {
                 if (rowPlayer == colPlayer)
-                {
-                    Console.Write(" |    -    ");
+                {                    
+                    Console.Write(" |    -   ");
                 }
                 else if (matchLookup.TryGetValue((rowPlayer, colPlayer), out var match))
                 {
                     var winRate = match.Player1WinRate;
-                    Console.Write($" | {winRate,7:P1}");
+                    Console.Write($" | {winRate,8:P1}");
                 }
                 else
                 {
