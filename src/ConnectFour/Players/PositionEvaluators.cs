@@ -1,5 +1,7 @@
 namespace ConnectFour.Players;
 
+using System.Numerics;
+
 /// <summary>
 /// Interface for position evaluation strategies.
 /// </summary>
@@ -27,154 +29,65 @@ public class BasicPositionEvaluator : IPositionEvaluator
 }
 
 /// <summary>
-/// Enhanced evaluator with Connect Four-specific heuristics.
-/// The heuristics provide:
-///   Center column preference (columns 3-4 most valuable)
-///   Threat detection (3-in-a-row patterns worth 50 points)
-///   Defensive prioritization (blocking threats worth 60 points)
-///   Two-in-a-row building (foundation patterns worth 2 points)
+/// High-performance bitboard-based position evaluator for Connect Four.
+/// Uses bitwise operations instead of expensive cell-by-cell board scanning.
+/// Provides Connect Four-specific heuristics optimized for speed.
 /// </summary>
-public class ConnectFourPositionEvaluator : IPositionEvaluator
+public class BitboardPositionEvaluator : IPositionEvaluator
 {
+    // Precomputed column masks for center control evaluation
+    private const ulong Column3Mask = 0x1FC0000UL;  // Column 3 (center-left)
+    private const ulong Column4Mask = 0x3F800000UL; // Column 4 (center-right)  
+    private const ulong CenterColumnsMask = Column3Mask | Column4Mask;
+    
     public int Evaluate(GameBoard board, CellState player)
     {
-        var opponent = Opponent(player);
+        var playerBits = player == CellState.X ? board.XBitboard : board.OBitboard;
+        var opponentBits = player == CellState.X ? board.OBitboard : board.XBitboard;
+        
         int score = 0;
-
-        // Center column preference - center control is crucial in Connect Four
-        score += CountPiecesInColumn(board, 3, player) * 3;
-        score -= CountPiecesInColumn(board, 3, opponent) * 3;
-
-        // Evaluate threats (potential four-in-a-rows)
-        score += CountThreats(board, player) * 50;
-        score -= CountThreats(board, opponent) * 60; // Defending is slightly more important
-
-        // Control of center region (columns 2-4)
-        for (int col = 2; col <= 4; col++)
-        {
-            score += CountPiecesInColumn(board, col, player) * 2;
-            score -= CountPiecesInColumn(board, col, opponent) * 2;
-        }
-
-        // Evaluate potential two-in-a-rows (building opportunities)
-        score += CountTwoInARows(board, player) * 2;
-        score -= CountTwoInARows(board, opponent) * 2;
-
+        
+        // Center control - count pieces in center columns (simplified but fast)
+        score += BitOperations.PopCount(playerBits & CenterColumnsMask) * 3;
+        score -= BitOperations.PopCount(opponentBits & CenterColumnsMask) * 3;
+        
+        // Threat evaluation - detect 3-in-a-row patterns
+        score += CountThreats(playerBits, opponentBits) * 50;
+        score -= CountThreats(opponentBits, playerBits) * 60; // Defense slightly more important
+        
         return score;
     }
-
-    private static int CountPiecesInColumn(GameBoard board, int column, CellState player)
+    
+    /// <summary>
+    /// Fast bitboard-based threat detection for 3-in-a-row patterns.
+    /// Uses bit-shifting to detect horizontal, vertical, and diagonal patterns.
+    /// </summary>
+    private static int CountThreats(ulong playerBits, ulong opponentBits)
     {
-        int count = 0;
-        for (int row = 0; row < GameBoard.Rows; row++)
-        {
-            if (board[row, column] == player)
-                count++;
-        }
-        return count;
-    }
-
-    private static int CountThreats(GameBoard board, CellState player)
-    {
+        const int BitsPerColumn = 7; // 6 rows + 1 separator
         int threats = 0;
-
-        for (int row = 0; row < GameBoard.Rows; row++)
-        {
-            for (int col = 0; col < GameBoard.Columns; col++)
-            {
-                // Horizontal threats
-                if (col <= GameBoard.Columns - 4)
-                    threats += CountLineThreat(board, row, col, 0, 1, player);
-
-                // Vertical threats  
-                if (row <= GameBoard.Rows - 4)
-                    threats += CountLineThreat(board, row, col, 1, 0, player);
-
-                // Diagonal threats (/)
-                if (row <= GameBoard.Rows - 4 && col <= GameBoard.Columns - 4)
-                    threats += CountLineThreat(board, row, col, 1, 1, player);
-
-                // Diagonal threats (\)
-                if (row >= 3 && col <= GameBoard.Columns - 4)
-                    threats += CountLineThreat(board, row, col, -1, 1, player);
-            }
-        }
-
+        
+        // Horizontal threats: check for XXX_ patterns
+        var horizontal = playerBits & (playerBits >> BitsPerColumn) & (playerBits >> (2 * BitsPerColumn));
+        // Check if the 4th position is empty (not occupied by either player)
+        var emptySpaces = ~(playerBits | opponentBits);
+        threats += BitOperations.PopCount(horizontal & (emptySpaces >> (3 * BitsPerColumn)));
+        threats += BitOperations.PopCount(horizontal & (emptySpaces << (3 * BitsPerColumn)));
+        
+        // Vertical threats: check for XXX_ patterns (pieces stacked vertically)
+        var vertical = playerBits & (playerBits >> 1) & (playerBits >> 2);
+        threats += BitOperations.PopCount(vertical & (emptySpaces >> 3));
+        
+        // Diagonal threats (/) - shift by (BitsPerColumn - 1)
+        var diagonal1 = playerBits & (playerBits >> (BitsPerColumn - 1)) & (playerBits >> (2 * (BitsPerColumn - 1)));
+        threats += BitOperations.PopCount(diagonal1 & (emptySpaces >> (3 * (BitsPerColumn - 1))));
+        threats += BitOperations.PopCount(diagonal1 & (emptySpaces << (3 * (BitsPerColumn - 1))));
+        
+        // Diagonal threats (\) - shift by (BitsPerColumn + 1)  
+        var diagonal2 = playerBits & (playerBits >> (BitsPerColumn + 1)) & (playerBits >> (2 * (BitsPerColumn + 1)));
+        threats += BitOperations.PopCount(diagonal2 & (emptySpaces >> (3 * (BitsPerColumn + 1))));
+        threats += BitOperations.PopCount(diagonal2 & (emptySpaces << (3 * (BitsPerColumn + 1))));
+        
         return threats;
     }
-
-    private static int CountLineThreat(GameBoard board, int startRow, int startCol, int deltaRow, int deltaCol, CellState player)
-    {
-        int playerCount = 0;
-        int emptyCount = 0;
-
-        for (int i = 0; i < 4; i++)
-        {
-            int row = startRow + i * deltaRow;
-            int col = startCol + i * deltaCol;
-            
-            var cell = board[row, col];
-            if (cell == player)
-                playerCount++;
-            else if (cell == CellState.Empty)
-                emptyCount++;
-            else
-                return 0; // Opponent piece blocks this line
-        }
-
-        return (playerCount == 3 && emptyCount == 1) ? 1 : 0;
-    }
-
-    private static int CountTwoInARows(GameBoard board, CellState player)
-    {
-        int count = 0;
-
-        for (int row = 0; row < GameBoard.Rows; row++)
-        {
-            for (int col = 0; col < GameBoard.Columns; col++)
-            {
-                // Horizontal two-in-a-rows
-                if (col <= GameBoard.Columns - 4)
-                    count += CountLineTwoInARow(board, row, col, 0, 1, player);
-
-                // Vertical two-in-a-rows
-                if (row <= GameBoard.Rows - 4)
-                    count += CountLineTwoInARow(board, row, col, 1, 0, player);
-
-                // Diagonal two-in-a-rows (/)
-                if (row <= GameBoard.Rows - 4 && col <= GameBoard.Columns - 4)
-                    count += CountLineTwoInARow(board, row, col, 1, 1, player);
-
-                // Diagonal two-in-a-rows (\)
-                if (row >= 3 && col <= GameBoard.Columns - 4)
-                    count += CountLineTwoInARow(board, row, col, -1, 1, player);
-            }
-        }
-
-        return count;
-    }
-
-    private static int CountLineTwoInARow(GameBoard board, int startRow, int startCol, int deltaRow, int deltaCol, CellState player)
-    {
-        int playerCount = 0;
-        int emptyCount = 0;
-
-        for (int i = 0; i < 4; i++)
-        {
-            int row = startRow + i * deltaRow;
-            int col = startCol + i * deltaCol;
-            
-            var cell = board[row, col];
-            if (cell == player)
-                playerCount++;
-            else if (cell == CellState.Empty)
-                emptyCount++;
-            else
-                return 0; // Opponent piece blocks this line
-        }
-
-        return (playerCount == 2 && emptyCount == 2) ? 1 : 0;
-    }
-
-    private static CellState Opponent(CellState player) => player == CellState.X ? CellState.O : CellState.X;
 }

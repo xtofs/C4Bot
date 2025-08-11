@@ -14,6 +14,16 @@ public sealed class GameBoard
     private readonly ulong x;
     private readonly ulong o;
 
+    /// <summary>
+    /// Gets the bitboard for player X (for advanced position evaluation).
+    /// </summary>
+    public ulong XBitboard => x;
+
+    /// <summary>
+    /// Gets the bitboard for player O (for advanced position evaluation).
+    /// </summary>
+    public ulong OBitboard => o;
+
     public GameBoard() : this(0, 0)
     {
     }
@@ -36,6 +46,7 @@ public sealed class GameBoard
         return GameResult.Ongoing;
     }
 
+[Obsolete("this  a fairly expensive operation that should be replaced with operations that leverage the bitboards")]
     public CellState this[int row, int col]
     {
         get

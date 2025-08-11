@@ -15,7 +15,7 @@ class Program
           ("Random", name => new RandomPlayer(name)),
           ("MonteCarloTreeSearch (1000)", name => new MonteCarloTreeSearchPlayer(name, 1000)),
           ("Minimax (6)", name => new MinimaxPlayer(name, 6)),
-          ("EnhancedMinimax (6)", name => new MinimaxWithHeuristicPlayer(name, 6)),
+          ("EnhancedMinimax (6)", name => new MinimaxWithHeuristicPlayer(name, 6, new BitboardPositionEvaluator())),
         ];
 
         IPlayer playerX, playerO;

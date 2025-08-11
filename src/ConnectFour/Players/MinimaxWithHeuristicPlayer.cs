@@ -12,7 +12,7 @@ namespace ConnectFour.Players;
 /// <param name="maxDepth">The maximum search depth (default 6).</param>
 public class MinimaxWithHeuristicPlayer(string name, int maxDepth, IPositionEvaluator evaluator) : IPlayer
 {
-    public MinimaxWithHeuristicPlayer(string name, int maxDepth) : this (name, maxDepth, new ConnectFourPositionEvaluator())
+    public MinimaxWithHeuristicPlayer(string name, int maxDepth) : this (name, maxDepth, new BitboardPositionEvaluator())
     {
     }
 
