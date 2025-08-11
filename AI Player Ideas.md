@@ -7,20 +7,20 @@ This document outlines various approaches for creating new automated players bas
 Based on our tournament results, we identified several key insights:
 
 - **MCTS dominance**: 95.3% overall win rate, excels at positional understanding
-- **Negamax-3 anomaly**: 61.1% win rate despite shallow depth suggests evaluation function limitations
+- **Minimax-3 anomaly**: 61.1% win rate despite shallow depth suggests evaluation function limitations
 - **Depth threshold**: Strong correlation (-0.92) between search depth and tactical robustness
-- **Performance gap**: Significant opportunity between Negamax variants and MCTS
+- **Performance gap**: Significant opportunity between Minimax variants and MCTS
 
 ## Proposed AI Player Approaches
 
-### 1. Enhanced Negamax with Static Evaluation
+### 1. Enhanced Minimax with Static Evaluation
 
-**Concept**: The current Negamax only evaluates terminal positions (win/loss/draw = ±10000/0). Adding positional evaluation could dramatically improve performance.
+**Concept**: The current Minimax only evaluates terminal positions (win/loss/draw = ±10000/0). Adding positional evaluation could dramatically improve performance.
 
 **Implementation**:
 
 ```csharp
-public class EvaluatedNegamaxPlayer : IPlayer
+public class EvaluatedMinimaxPlayer : IPlayer
 {
     private static int EvaluatePosition(GameBoard board, CellState player)
     {
@@ -40,7 +40,7 @@ public class EvaluatedNegamaxPlayer : IPlayer
 }
 ```
 
-**Rationale**: Our Negamax-3 anomaly suggests the evaluation function is the bottleneck, not search depth. Connect Four has well-known positional principles that could be encoded.
+**Rationale**: Our Minimax-3 anomaly suggests the evaluation function is the bottleneck, not search depth. Connect Four has well-known positional principles that could be encoded.
 
 **Evaluation Components**:
 
@@ -69,13 +69,13 @@ public class HybridPlayer : IPlayer
         if (moveCount < 14) 
             return openingPlayer.ChooseMove(board, player);
             
-        // Endgame: Use deep Negamax for tactical precision
+        // Endgame: Use deep Minimax for tactical precision
         return endgamePlayer.ChooseMove(board, player);
     }
 }
 ```
 
-**Rationale**: MCTS excels at positional play and long-term planning, while deep Negamax (depth 8) is tactically perfect. Combining both could leverage their respective strengths.
+**Rationale**: MCTS excels at positional play and long-term planning, while deep Minimax (depth 8) is tactically perfect. Combining both could leverage their respective strengths.
 
 **Phase Definitions**:
 
@@ -134,7 +134,7 @@ public class EnsemblePlayer : IPlayer
 **Implementation**:
 
 ```csharp
-public class AdaptiveNegamaxPlayer : IPlayer
+public class AdaptiveMinimaxPlayer : IPlayer
 {
     public int ChooseMove(GameBoard board, CellState player)
     {
@@ -142,14 +142,14 @@ public class AdaptiveNegamaxPlayer : IPlayer
         
         // Simple positions: shallow search
         if (availableMoves.Length >= 5)
-            return new NegamaxPlayer("Fast", 4).ChooseMove(board, player);
+            return new MinimaxPlayer("Fast", 4).ChooseMove(board, player);
             
         // Complex positions: deeper search
         if (HasImmediateThreat(board))
-            return new NegamaxPlayer("Deep", 8).ChooseMove(board, player);
+            return new MinimaxPlayer("Deep", 8).ChooseMove(board, player);
             
         // Default
-        return new NegamaxPlayer("Standard", 6).ChooseMove(board, player);
+        return new MinimaxPlayer("Standard", 6).ChooseMove(board, player);
     }
 }
 ```
@@ -209,9 +209,9 @@ public class PatternPlayer : IPlayer
 
 Based on our analysis, the recommended implementation order:
 
-1. **Enhanced Negamax** - Most likely to show immediate improvement
+1. **Enhanced Minimax** - Most likely to show immediate improvement
 2. **Hybrid Opening/Endgame** - Leverages known algorithm strengths
-3. **Adaptive Negamax** - Builds on Enhanced Negamax insights
+3. **Adaptive Minimax** - Builds on Enhanced Minimax insights
 4. **Ensemble Player** - Combines multiple working algorithms
 5. **Pattern Player** - Research-oriented, requires training data
 
@@ -219,7 +219,7 @@ Based on our analysis, the recommended implementation order:
 
 Each approach addresses different research questions:
 
-- **Enhanced Negamax**: Can better evaluation bridge the MCTS gap?
+- **Enhanced Minimax**: Can better evaluation bridge the MCTS gap?
 - **Hybrid**: Can algorithm specialization outperform generalists?
 - **Ensemble**: Do multiple perspectives improve decision quality?
 - **Adaptive**: Can dynamic complexity assessment optimize resources?

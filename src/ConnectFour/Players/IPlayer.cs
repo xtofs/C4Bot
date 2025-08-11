@@ -11,7 +11,7 @@ public interface IPlayer
     string PlayerName { get; }
 
     /// <summary>
-    /// descriptive name of the algoritm with its parameter. E.g. Negamax(4)
+    /// descriptive name of the algoritm with its parameter. E.g. Minimax(4)
     /// </summary>
     string AlgorithmName { get; }
 
