@@ -325,6 +325,65 @@ public sealed class GameBoard
     }
 
     /// <summary>
+    /// Finds all positions where the specified player can win in one move (threats).
+    /// </summary>
+    /// <param name="player">The player to check for threats</param>
+    /// <returns>A list of (row, col) positions where the player can win with one move</returns>
+    public List<(int row, int col)> FindThreats(CellState player)
+    {
+        var threats = new List<(int row, int col)>();
+        
+        // Check each available column
+        for (int col = 0; col < Columns; col++)
+        {
+            if (!IsColumnFull(col))
+            {
+                // Find the row where the piece would land using bitboards
+                var columnMask = GetColumnMask(col);
+                var occupiedInColumn = (XBitboard | OBitboard) & columnMask;
+                
+                // Find the lowest empty position in the column
+                int row = -1;
+                for (int r = 0; r < Rows; r++)
+                {
+                    var position = GetPosition(r, col);
+                    if ((occupiedInColumn & position) == 0)
+                    {
+                        row = r;
+                        break;
+                    }
+                }
+                
+                if (row != -1)
+                {
+                    // Simulate placing the piece and check if it wins
+                    var testBoard = ApplyMove(col, player);
+                    if (testBoard.HasGameEnded(out var result, out _))
+                    {
+                        if ((player == CellState.X && result == GameResult.WinX) ||
+                            (player == CellState.O && result == GameResult.WinO))
+                        {
+                            threats.Add((row, col));
+                        }
+                    }
+                }
+            }
+        }
+        
+        return threats;
+    }
+
+    private static ulong GetColumnMask(int col)
+    {
+        return 0x7FUL << (col * BitsPerColumn);
+    }
+    
+    private static ulong GetPosition(int row, int col)
+    {
+        return 1UL << (col * BitsPerColumn + row);
+    }
+
+    /// <summary>
     /// Creates a GameBoard by replaying a sequence of moves.
     /// </summary>
     /// <param name="moves">Move sequence like "4 3 5 2 6 1" (space-separated column numbers)</param>

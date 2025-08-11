@@ -19,6 +19,20 @@ class Program
         ];
 
         IPlayer playerX, playerO;
+        bool showThreats = false;
+        
+        // Parse command line arguments
+        var argsList = args.ToList();
+        
+        // Check for --show-threats flag
+        if (argsList.Contains("--show-threats"))
+        {
+            showThreats = true;
+            argsList.Remove("--show-threats");
+        }
+        
+        // Convert back to array for existing logic
+        args = argsList.ToArray();
         
         // Check for --moves argument
         if (args.Length >= 2 && args[0] == "--moves")
@@ -68,7 +82,7 @@ class Program
                 playerX = SelectPlayer(playerChoices, "Player X");
                 playerO = SelectPlayer(playerChoices, "Player O");
                 
-                GameRunner.RunGame(playerX, playerO, board);
+                GameRunner.RunGame(playerX, playerO, board, showThreats);
                 return;
             }
             catch (Exception ex)
@@ -96,9 +110,13 @@ class Program
         else if (args.Length != 2)
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("  dotnet run                   - Interactive player selection");
-            Console.WriteLine("  dotnet run <p1> <p2>        - Direct player selection"); 
-            Console.WriteLine("  dotnet run --moves <moves>  - Load game from moves");
+            Console.WriteLine("  dotnet run                          - Interactive player selection");
+            Console.WriteLine("  dotnet run <p1> <p2>               - Direct player selection"); 
+            Console.WriteLine("  dotnet run --moves <moves>         - Load game from moves");
+            Console.WriteLine("  dotnet run --show-threats <p1> <p2> - Show threat warnings for interactive players");
+            Console.WriteLine();
+            Console.WriteLine("Flags:");
+            Console.WriteLine("  --show-threats    - Highlight opponent winning moves with red exclamation marks");
             Console.WriteLine();
             Console.WriteLine("Available algorithms:");
             foreach (var ((name, _), i) in playerChoices.Select((a, i) => (a, i + 1)))
@@ -115,7 +133,7 @@ class Program
             playerO = SelectPlayer(playerChoices, "Player O");
         }
 
-        GameRunner.RunGame(playerX, playerO);
+        GameRunner.RunGame(playerX, playerO, showThreats);
     }
 
 
