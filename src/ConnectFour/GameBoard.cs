@@ -46,7 +46,7 @@ public sealed class GameBoard
         return GameResult.Ongoing;
     }
 
-[Obsolete("this  a fairly expensive operation that should be replaced with operations that leverage the bitboards")]
+[Obsolete("this is a fairly expensive operation that should be replaced with operations that leverage the bitboards")]
     public CellState this[int row, int col]
     {
         get
@@ -205,7 +205,6 @@ public sealed class GameBoard
     /// <returns>A set of (row, col) tuples for the winning four, or empty if no win.</returns>
     public HashSet<(int row, int col)> GetWinningCells(CellState player)
     {
-        var result = new HashSet<(int row, int col)>();
         for (var row = 0; row < Rows; row++)
         {
             for (var col = 0; col < Columns; col++)
@@ -217,47 +216,25 @@ public sealed class GameBoard
                 // Horizontal
                 if (col <= Columns - 4 && Enumerable.Range(0, 4).All(d => this[row, col + d] == player))
                 {
-                    for (var d = 0; d < 4; d++)
-                    {
-                        result.Add((row, col + d));
-                    }
-
-                    return result;
+                    return [.. Enumerable.Range(0, 4).Select(d => (row, col + d))];
                 }
                 // Vertical
                 if (row <= Rows - 4 && Enumerable.Range(0, 4).All(d => this[row + d, col] == player))
                 {
-                    for (var d = 0; d < 4; d++)
-                    {
-                        result.Add((row + d, col));
-                    }
-
-                    return result;
+                    return [.. Enumerable.Range(0, 4).Select(d => (row + d, col))];
                 }
                 // Diagonal /
                 if (row <= Rows - 4 && col >= 3 && Enumerable.Range(0, 4).All(d => this[row + d, col - d] == player))
                 {
-                    for (var d = 0; d < 4; d++)
-                    {
-                        result.Add((row + d, col - d));
-                    }
-
-                    return result;
+                    return [.. Enumerable.Range(0, 4).Select(d => (row + d, col - d))];
                 }
                 // Diagonal \
                 if (row <= Rows - 4 && col <= Columns - 4 && Enumerable.Range(0, 4).All(d => this[row + d, col + d] == player))
                 {
-                    for (var d = 0; d < 4; d++)
-                    {
-                        result.Add((row + d, col + d));
-                    }
-
-                    return result;
+                    return [.. Enumerable.Range(0, 4).Select(d => (row + d, col + d))];
                 }
             }
         }
-        return result;
+        return [];
     }
-
-   
 }
