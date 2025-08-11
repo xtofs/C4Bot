@@ -56,7 +56,7 @@ public class Tournament
         {
             // Alternate who goes first
             var (p1, p2) = game % 2 == 0 ? (player1, player2) : (player2, player1);
-            
+
             var gameStart = DateTime.UtcNow;
             var result = PlayGame(p1, p2);
             var gameTime = DateTime.UtcNow - gameStart;
@@ -79,11 +79,7 @@ public class Tournament
                     draws++;
                     break;
 
-                // unreachable. added for exhaustive pattern matching
-                case GameResult.Ongoing:
-                case GameResult.WinO:
-                case GameResult.WinX:
-                default:                    
+                default:
                     break;
             }
 
@@ -114,12 +110,12 @@ public class Tournament
         var board = new GameBoard();
         var currentPlayer = CellState.X;
         Span<int> availableMoves = stackalloc int[GameBoard.Columns];
-        
+
         while (true)
         {
             var player = currentPlayer == CellState.X ? playerX : playerO;
             var move = player.ChooseMove(board, currentPlayer);
-            
+
             // Validate the move is valid
             board.GetAvailableMoves(availableMoves, out var availableCount);
             var isValidMove = false;
@@ -131,21 +127,22 @@ public class Tournament
                     break;
                 }
             }
-            
+
             if (!isValidMove)
             {
                 // If the player made an invalid move, they lose
                 return currentPlayer == CellState.X ? GameResult.WinO : GameResult.WinX;
             }
-            
+
             board = board.ApplyMove(move, currentPlayer);
-            
-            var result = board.GetGameResult();
-            if (result != GameResult.Ongoing)
+
+            var state = board.GetGameState();
+            if (state != GameState.Ongoing)
             {
-                return result;
+                // Only return a GameResult for terminal states
+                return state.ToGameResult();
             }
-            
+
             currentPlayer = currentPlayer == CellState.X ? CellState.O : CellState.X;
         }
     }
