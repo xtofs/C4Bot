@@ -64,16 +64,16 @@ public class MonteCarloTreeSearchPlayer : IPlayer
     {
         while (true)
         {
-            var result = board.GetGameResult();
-            if (result == GameResult.WinX)
+            var result = board.GetGameState();
+            if (result == GameState.WinX)
             {
                 return CellState.X;
             }
-            if (result == GameResult.WinO)
+            if (result == GameState.WinO)
             {
                 return CellState.O;
             }
-            if (result == GameResult.Draw)
+            if (result == GameState.Draw)
             {
                 return CellState.Empty;
             }

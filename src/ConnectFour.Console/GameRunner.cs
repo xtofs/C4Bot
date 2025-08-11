@@ -47,12 +47,12 @@ public static class GameRunner
             lastMove = lastMoveCoords;
             if (board.HasGameEnded(out var result, out var winningCells))
             {
-                if (result == GameResult.WinX || result == GameResult.WinO)
+                if (result == GameState.WinX || result == GameState.WinO)
                 {
                     PrintBoard(board, lastMove, winningCells, threatPositions: null);
-                    Console.WriteLine($"{(result == GameResult.WinX ? playerX.PlayerName : playerO.PlayerName)} wins!");
+                    Console.WriteLine($"{(result == GameState.WinX ? playerX.PlayerName : playerO.PlayerName)} wins!");
                 }
-                else if (result == GameResult.Draw)
+                else if (result == GameState.Draw)
                 {
                     PrintBoard(board, lastMove, winningCells: null, threatPositions: null);
                     Console.WriteLine("Draw!");
@@ -108,12 +108,12 @@ public static class GameRunner
             lastMove = lastMoveCoords;
             if (board.HasGameEnded(out var result, out var winningCells))
             {
-                if (result == GameResult.WinX || result == GameResult.WinO)
+                if (result == GameState.WinX || result == GameState.WinO)
                 {
                     PrintBoard(board, lastMove, winningCells, threatPositions: null);
-                    Console.WriteLine($"{(result == GameResult.WinX ? playerX.PlayerName : playerO.PlayerName)} wins!");
+                    Console.WriteLine($"{(result == GameState.WinX ? playerX.PlayerName : playerO.PlayerName)} wins!");
                 }
-                else if (result == GameResult.Draw)
+                else if (result == GameState.Draw)
                 {
                     PrintBoard(board, lastMove, winningCells: null, threatPositions: null);
                     Console.WriteLine("Draw!");

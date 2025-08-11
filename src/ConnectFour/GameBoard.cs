@@ -62,15 +62,15 @@ public sealed class GameBoard
     }
 
     /// <summary>
-    /// Returns the result of the game (WinX, WinO, Draw, or Ongoing) efficiently, without calculating winning cells.
+    /// Returns the state of the game (WinX, WinO, Draw, or Ongoing) efficiently, without calculating winning cells.
     /// </summary>
-    /// <returns>The result of the game.</returns>
-    public GameResult GetGameResult()
+    /// <returns>The state of the game.</returns>
+    public GameState GetGameState()
     {
-        if (IsWin(CellState.X)) { return GameResult.WinX; }
-        if (IsWin(CellState.O)) { return GameResult.WinO; }
-        if (IsDraw()) { return GameResult.Draw; }
-        return GameResult.Ongoing;
+        if (IsWin(CellState.X)) { return GameState.WinX; }
+        if (IsWin(CellState.O)) { return GameState.WinO; }
+        if (IsDraw()) { return GameState.Draw; }
+        return GameState.Ongoing;
     }
 
     [Obsolete("this is a fairly expensive operation that should be replaced with operations that leverage the bitboards")]
@@ -135,6 +135,31 @@ public sealed class GameBoard
         return player == CellState.X
             ? new GameBoard(XBitboard | newBit, OBitboard)
             : new GameBoard(XBitboard, OBitboard | newBit);
+    }
+
+    /// <summary>
+    /// Type-safe version: Apply a move to the board using Player enum.
+    /// </summary>
+    /// <param name="col">The column to play in (0-based).</param>
+    /// <param name="player">The player making the move.</param>
+    /// <returns>A new GameBoard with the move applied.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the column is full.</exception>
+    public GameBoard ApplyMove(int col, Player player)
+    {
+        return ApplyMove(col, player.ToCellState());
+    }
+
+    /// <summary>
+    /// Type-safe version: Apply a move to the board using Player enum, returning placement position.
+    /// </summary>
+    /// <param name="col">The column to play in (0-based).</param>
+    /// <param name="player">The player making the move.</param>
+    /// <param name="placedAt">The coordinates (row, col) where the piece was placed.</param>
+    /// <returns>A new GameBoard with the move applied.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the column is full.</exception>
+    public GameBoard ApplyMove(int col, Player player, out (int row, int col) placedAt)
+    {
+        return ApplyMove(col, player.ToCellState(), out placedAt);
     }
 
     private bool IsWin(CellState player)
@@ -215,32 +240,62 @@ public sealed class GameBoard
     /// <param name="result">The result of the game (WinX, WinO, Draw, or Ongoing).</param>
     /// <param name="winningCells">The set of winning cells if there is a win, otherwise null.</param>
     /// <returns>True if the game has ended, false if ongoing.</returns>
-    public bool HasGameEnded([MaybeNullWhen(true)] out GameResult result, [MaybeNullWhen(true)] out HashSet<(int row, int col)>? winningCells)
+    public bool HasGameEnded([MaybeNullWhen(true)] out GameState result, [MaybeNullWhen(true)] out HashSet<(int row, int col)>? winningCells)
     {
         // Fast win check for X
         if (IsWin(CellState.X))
         {
-            result = GameResult.WinX;
+            result = GameState.WinX;
             winningCells = GetWinningCells(CellState.X);
             return true;
         }
         // Fast win check for O
         if (IsWin(CellState.O))
         {
-            result = GameResult.WinO;
+            result = GameState.WinO;
             winningCells = GetWinningCells(CellState.O);
             return true;
         }
         // Check draw
         if (((XBitboard | OBitboard) & BoardMask) == BoardMask)
         {
-            result = GameResult.Draw;
+            result = GameState.Draw;
             winningCells = null;
             return true;
         }
-        result = GameResult.Ongoing;
+        result = GameState.Ongoing;
         winningCells = null;
         return false;
+    }
+
+    /// <summary>
+    /// Type-safe version: Checks if the game has ended, returning only terminal results.
+    /// </summary>
+    /// <param name="winningCells">The set of winning cells if there is a win, otherwise null.</param>
+    /// <returns>The terminal game result if the game has ended, null if ongoing.</returns>
+    public GameResult? GetGameResult(out HashSet<(int row, int col)>? winningCells)
+    {
+        // Fast win check for X
+        if (IsWin(CellState.X))
+        {
+            winningCells = GetWinningCells(CellState.X);
+            return GameResult.WinX;
+        }
+        // Fast win check for O
+        if (IsWin(CellState.O))
+        {
+            winningCells = GetWinningCells(CellState.O);
+            return GameResult.WinO;
+        }
+        // Check draw
+        if (((XBitboard | OBitboard) & BoardMask) == BoardMask)
+        {
+            winningCells = null;
+            return GameResult.Draw;
+        }
+        // Game is ongoing
+        winningCells = null;
+        return null;
     }
 
     /// <summary>
@@ -360,8 +415,8 @@ public sealed class GameBoard
                     var testBoard = ApplyMove(col, player);
                     if (testBoard.HasGameEnded(out var result, out _))
                     {
-                        if ((player == CellState.X && result == GameResult.WinX) ||
-                            (player == CellState.O && result == GameResult.WinO))
+                        if ((player == CellState.X && result == GameState.WinX) ||
+                            (player == CellState.O && result == GameState.WinO))
                         {
                             threats.Add((row, col));
                         }
@@ -371,6 +426,16 @@ public sealed class GameBoard
         }
         
         return threats;
+    }
+
+    /// <summary>
+    /// Type-safe version: Finds all positions where the specified player can win in one move (threats).
+    /// </summary>
+    /// <param name="player">The player to check for threats</param>
+    /// <returns>A list of (row, col) positions where the player can win with one move</returns>
+    public List<(int row, int col)> FindThreats(Player player)
+    {
+        return FindThreats(player.ToCellState());
     }
 
     private static ulong GetColumnMask(int col)

@@ -66,11 +66,11 @@ class Program
                 // Check if the game has already ended
                 if (board.HasGameEnded(out var result, out var winningCells))
                 {
-                    if (result == GameResult.WinX)
+                    if (result == GameState.WinX)
                         Console.WriteLine("Player X has already won!");
-                    else if (result == GameResult.WinO)  
+                    else if (result == GameState.WinO)  
                         Console.WriteLine("Player O has already won!");
-                    else if (result == GameResult.Draw)
+                    else if (result == GameState.Draw)
                         Console.WriteLine("Game is already a draw!");
                     return;
                 }
