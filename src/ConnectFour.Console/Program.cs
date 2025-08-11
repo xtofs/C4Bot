@@ -29,6 +29,12 @@ class Program
             Console.WriteLine($"Player X {playerX.PlayerName} {playerX.AlgorithmName}");
             Console.WriteLine($"Player O {playerO.PlayerName} {playerO.AlgorithmName}");
         }
+        else if (args.Length == 0)
+        {
+            // Interactive player selection
+            playerX = SelectPlayer(playerChoices, "Player X");
+            playerO = SelectPlayer(playerChoices, "Player O");
+        }
         else if (args.Length != 2)
         {
             Console.WriteLine("Please provide two player selections as command line arguments. Or none for interactive selection.");
@@ -62,7 +68,7 @@ class Program
         Console.WriteLine($"Enter Number between 1 and {choices.Length}:");
         foreach (var ((name, _), i) in choices.Select((a, i) => (a, i + 1)))
         {
-            Console.WriteLine($" - {i}, {name}");
+            Console.WriteLine($" {i}: {name}");
         }
 
         while (true)

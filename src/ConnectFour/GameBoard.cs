@@ -11,18 +11,45 @@ public sealed class GameBoard
     private const ulong BoardMask = 0x1FFFFFFFFFFFFUL;
     private const ulong TopRowMask = 0x40810204081UL; // Top row of each column
 
-    private readonly ulong x;
-    private readonly ulong o;
-
     /// <summary>
     /// Gets the bitboard for player X (for advanced position evaluation).
-    /// </summary>
-    public ulong XBitboard => x;
+    /// 
+    /// DESIGN NOTE: This property exposes internal implementation details, which normally
+    /// violates encapsulation. However, this is a deliberate compromise to allow performance-critical
+    /// code (like BitboardPositionEvaluator) direct access to efficient bitboard operations.
+    /// For typical use cases, prefer ToArray() or the indexer for better encapsulation.
+    /// 
+    /// Be aware that this is an implementation detail and should be used with caution.
+    /// The bit layout is: 
+    ///     bit number i represents the grid cell (col,row) where 
+    ///     i = col * 7 + row,
+    ///     col = i / 7, 
+    ///     row = i % 7.
+    /// Each column uses 7 bits (rows 0-5 for the board, bit 6 is unused).
+    /// Bit positions 0-6 are column 0, bits 7-13 are column 1, etc.
+    /// For example: bit 0 = (0,0), bit 1 = (0,1), bit 7 = (1,0), bit 14 = (2,0).
+    /// </summary>    
+    public ulong XBitboard { get; }
 
     /// <summary>
     /// Gets the bitboard for player O (for advanced position evaluation).
-    /// </summary>
-    public ulong OBitboard => o;
+    /// 
+    /// DESIGN NOTE: This property exposes internal implementation details, which normally
+    /// violates encapsulation. However, this is a deliberate compromise to allow performance-critical
+    /// code (like BitboardPositionEvaluator) direct access to efficient bitboard operations.
+    /// For typical use cases, prefer ToArray() or the indexer for better encapsulation.
+    /// 
+    /// Be aware that this is an implementation detail and should be used with caution.
+    /// The bit layout is: 
+    ///     bit number i represents the grid cell (col,row) where 
+    ///     i = col * 7 + row,
+    ///     col = i / 7, 
+    ///     row = i % 7.
+    /// Each column uses 7 bits (rows 0-5 for the board, bit 6 is unused).
+    /// Bit positions 0-6 are column 0, bits 7-13 are column 1, etc.
+    /// For example: bit 0 = (0,0), bit 1 = (0,1), bit 7 = (1,0), bit 14 = (2,0).
+    /// </summary>    
+    public ulong OBitboard { get; }
 
     public GameBoard() : this(0, 0)
     {
@@ -30,8 +57,8 @@ public sealed class GameBoard
 
     internal GameBoard(ulong x, ulong o)
     {
-        this.x = x;
-        this.o = o;
+        XBitboard = x;
+        OBitboard = o;
     }
 
     /// <summary>
@@ -40,24 +67,24 @@ public sealed class GameBoard
     /// <returns>The result of the game.</returns>
     public GameResult GetGameResult()
     {
-        if (IsWin(CellState.X)) return GameResult.WinX;
-        if (IsWin(CellState.O)) return GameResult.WinO;
-        if (IsDraw()) return GameResult.Draw;
+        if (IsWin(CellState.X)) { return GameResult.WinX; }
+        if (IsWin(CellState.O)) { return GameResult.WinO; }
+        if (IsDraw()) { return GameResult.Draw; }
         return GameResult.Ongoing;
     }
 
-[Obsolete("this is a fairly expensive operation that should be replaced with operations that leverage the bitboards")]
+    [Obsolete("this is a fairly expensive operation that should be replaced with operations that leverage the bitboards")]
     public CellState this[int row, int col]
     {
         get
         {
             var pos = col * BitsPerColumn + row;
-            if (((x >> pos) & 1UL) != 0)
+            if (((XBitboard >> pos) & 1UL) != 0)
             {
                 return CellState.X;
             }
 
-            if (((o >> pos) & 1UL) != 0)
+            if (((OBitboard >> pos) & 1UL) != 0)
             {
                 return CellState.O;
             }
@@ -68,12 +95,11 @@ public sealed class GameBoard
 
     public bool IsColumnFull(int col)
     {
-        return ((x | o) & (1UL << (col * BitsPerColumn + Rows - 1))) != 0;
+        return ((XBitboard | OBitboard) & (1UL << (col * BitsPerColumn + Rows - 1))) != 0;
     }
 
     /// <summary>
-    /// Returns a new GameBoard with the specified move applied for the given player.
-    /// Throws if the column is full or if player is CellState.Empty.
+    /// Apply a move to the board, returning a new board with the move applied.
     /// </summary>
     /// <param name="col">The column to play in (0-based).</param>
     /// <param name="player">The player making the move (must be X or O).</param>
@@ -81,22 +107,39 @@ public sealed class GameBoard
     /// <exception cref="InvalidOperationException">Thrown if the column is full or player is Empty.</exception>
     public GameBoard ApplyMove(int col, CellState player)
     {
-        var mask = x | o;
+        return ApplyMove(col, player, out _);
+    }
+
+    /// <summary>
+    /// Apply a move to the board, returning a new board with the move applied and the position where the piece was placed.
+    /// </summary>
+    /// <param name="col">The column to play in (0-based).</param>
+    /// <param name="player">The player making the move (must be X or O).</param>
+    /// <param name="placedAt">The coordinates (row, col) where the piece was placed.</param>
+    /// <returns>A new GameBoard with the move applied.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the column is full or player is Empty.</exception>
+    public GameBoard ApplyMove(int col, CellState player, out (int row, int col) placedAt)
+    {
+        var mask = XBitboard | OBitboard;
         var colMask = ((1UL << Rows) - 1) << (col * BitsPerColumn);
         var filled = mask & colMask;
         var height = BitOperations.PopCount(filled);
-        
-        if (height >= Rows) throw new InvalidOperationException("Column is full");
-        
+
+        if (height >= Rows)
+        {
+            throw new InvalidOperationException("Column is full");
+        }
+
         var newBit = 1UL << (col * BitsPerColumn + height);
-        return player == CellState.X 
-            ? new GameBoard(x | newBit, o) 
-            : new GameBoard(x, o | newBit);
+        placedAt = (height, col);
+        return player == CellState.X
+            ? new GameBoard(XBitboard | newBit, OBitboard)
+            : new GameBoard(XBitboard, OBitboard | newBit);
     }
 
     private bool IsWin(CellState player)
     {
-        var board = player == CellState.X ? x : o;
+        var board = player == CellState.X ? XBitboard : OBitboard;
         var m = board & (board >> BitsPerColumn);
         if ((m & (m >> (2 * BitsPerColumn))) != 0)
         {
@@ -126,7 +169,7 @@ public sealed class GameBoard
 
     private bool IsDraw()
     {
-        return ((x | o) & BoardMask) == BoardMask;
+        return ((XBitboard | OBitboard) & BoardMask) == BoardMask;
     }
 
     public int[] GetAvailableMoves()
@@ -146,11 +189,13 @@ public sealed class GameBoard
     public void GetAvailableMoves(Span<int> moves, out int count)
     {
         count = 0;
-        ulong topRow = (x | o) & TopRowMask;  // Check which columns are full
+        ulong topRow = (XBitboard | OBitboard) & TopRowMask;  // Check which columns are full
         for (int col = 0; col < Columns; col++)
         {
             if ((topRow & (1UL << (col * BitsPerColumn + Rows - 1))) == 0)
+            {
                 moves[count++] = col;
+            }
         }
     }
 
@@ -158,7 +203,7 @@ public sealed class GameBoard
     /// Gets the total number of moves (pieces) that have been played on the board.
     /// Each move by either player counts as one half-move in chess terminology.
     /// </summary>
-    public int HalfMoveCount => BitOperations.PopCount(x | o);
+    public int HalfMoveCount => BitOperations.PopCount(XBitboard | OBitboard);
 
     /// <summary>
     /// Checks if the game has ended (win or draw) and provides the result and winning cells if applicable.
@@ -187,7 +232,7 @@ public sealed class GameBoard
             return true;
         }
         // Check draw
-        if (((x | o) & BoardMask) == BoardMask)
+        if (((XBitboard | OBitboard) & BoardMask) == BoardMask)
         {
             result = GameResult.Draw;
             winningCells = null;
@@ -205,36 +250,77 @@ public sealed class GameBoard
     /// <returns>A set of (row, col) tuples for the winning four, or empty if no win.</returns>
     public HashSet<(int row, int col)> GetWinningCells(CellState player)
     {
-        for (var row = 0; row < Rows; row++)
+        var board = player == CellState.X ? XBitboard : OBitboard;
+
+        // Check horizontal wins (4 in a row across columns)
+        var horizontal = board & (board >> BitsPerColumn) & (board >> (2 * BitsPerColumn)) & (board >> (3 * BitsPerColumn));
+        if (horizontal != 0)
         {
-            for (var col = 0; col < Columns; col++)
+            var (row, col) = GetFirstSetBit(horizontal);
+            return [(row, col), (row, col + 1), (row, col + 2), (row, col + 3)];
+        }
+
+        // Check vertical wins (4 in a row down rows)
+        var vertical = board & (board >> 1) & (board >> 2) & (board >> 3);
+        if (vertical != 0)
+        {
+            var (row, col) = GetFirstSetBit(vertical);
+            return [(row, col), (row + 1, col), (row + 2, col), (row + 3, col)];
+        }
+
+        // Check diagonal wins (/) - bottom-left to top-right
+        var diagonal1 = board & (board >> (BitsPerColumn - 1)) & (board >> (2 * (BitsPerColumn - 1))) & (board >> (3 * (BitsPerColumn - 1)));
+        if (diagonal1 != 0)
+        {
+            var (row, col) = GetFirstSetBit(diagonal1);
+            return [(row, col), (row + 1, col - 1), (row + 2, col - 2), (row + 3, col - 3)];
+        }
+
+        // Check diagonal wins (\) - top-left to bottom-right  
+        var diagonal2 = board & (board >> (BitsPerColumn + 1)) & (board >> (2 * (BitsPerColumn + 1))) & (board >> (3 * (BitsPerColumn + 1)));
+        if (diagonal2 != 0)
+        {
+            var (row, col) = GetFirstSetBit(diagonal2);
+            return [(row, col), (row + 1, col + 1), (row + 2, col + 2), (row + 3, col + 3)];
+        }
+
+        return [];
+    }
+
+    /// <summary>
+    /// Finds the first set bit in the bitboard and converts it to (row, col) coordinates.
+    /// </summary>
+    private static (int row, int col) GetFirstSetBit(ulong bitboard)
+    {
+        int bitPosition = BitOperations.TrailingZeroCount(bitboard);
+        int col = bitPosition / BitsPerColumn;
+        int row = bitPosition % BitsPerColumn;
+        return (row, col);
+    }
+
+    /// <summary>
+    /// Returns the current board state as a 2D array for display purposes.
+    /// This provides a clean abstraction that doesn't expose bitboard internals.
+    /// </summary>
+    /// <returns>A 2D array where [row, col] contains the CellState at that position.</returns>
+    public CellState[,] ToArray()
+    {
+        var grid = new CellState[Rows, Columns];
+        
+        for (int row = 0; row < Rows; row++)
+        {
+            for (int col = 0; col < Columns; col++)
             {
-                if (this[row, col] != player)
-                {
-                    continue;
-                }
-                // Horizontal
-                if (col <= Columns - 4 && Enumerable.Range(0, 4).All(d => this[row, col + d] == player))
-                {
-                    return [.. Enumerable.Range(0, 4).Select(d => (row, col + d))];
-                }
-                // Vertical
-                if (row <= Rows - 4 && Enumerable.Range(0, 4).All(d => this[row + d, col] == player))
-                {
-                    return [.. Enumerable.Range(0, 4).Select(d => (row + d, col))];
-                }
-                // Diagonal /
-                if (row <= Rows - 4 && col >= 3 && Enumerable.Range(0, 4).All(d => this[row + d, col - d] == player))
-                {
-                    return [.. Enumerable.Range(0, 4).Select(d => (row + d, col - d))];
-                }
-                // Diagonal \
-                if (row <= Rows - 4 && col <= Columns - 4 && Enumerable.Range(0, 4).All(d => this[row + d, col + d] == player))
-                {
-                    return [.. Enumerable.Range(0, 4).Select(d => (row + d, col + d))];
-                }
+                ulong position = 1UL << (col * BitsPerColumn + row);
+                if ((XBitboard & position) != 0)
+                    grid[row, col] = CellState.X;
+                else if ((OBitboard & position) != 0)
+                    grid[row, col] = CellState.O;
+                else
+                    grid[row, col] = CellState.Empty;
             }
         }
-        return [];
+        
+        return grid;
     }
 }

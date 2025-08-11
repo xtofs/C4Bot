@@ -16,42 +16,29 @@ public static class GameRunner
     {
         var board = new GameBoard();
         (int row, int col)? lastMove = null;
-        
+
         while (true)
         {
             PrintBoard(board, lastMove);
             var turn = board.HalfMoveCount % 2 == 0 ? 0 : 1;
             var player = turn == 0 ? playerX : playerO;
             var state = turn == 0 ? CellState.X : CellState.O;
-            
-            // Only show "to move" message for non-interactive players
-            // Interactive players will get their own combined prompt
-            if (!(player is InteractivePlayer))
+
+            var move = player.ChooseMove(board, state);
+
+            if (player is not InteractivePlayer)
             {
-                Console.WriteLine($"{player.PlayerName} to move ({(state == CellState.X ? "X" : "O")})");
+                Console.WriteLine($"{(state == CellState.X ? "X" : "O")} played {move + 1}");
             }
-            
-            int move = player.ChooseMove(board, state);
-            
-            // Calculate where the piece will land
-            int landingRow = -1;
-            for (int row = 0; row < GameBoard.Rows; row++)
-            {
-                if (board[row, move] == CellState.Empty)
-                {
-                    landingRow = row;
-                    break;
-                }
-            }
-            lastMove = landingRow >= 0 ? (landingRow, move) : null;
-            
-            board = board.ApplyMove(move, state);
+
+            board = board.ApplyMove(move, state, out var lastMoveCoords);
+            lastMove = lastMoveCoords;
             if (board.HasGameEnded(out var result, out var winningCells))
             {
                 if (result == GameResult.WinX || result == GameResult.WinO)
                 {
                     PrintBoard(board, lastMove, winningCells);
-                    Console.WriteLine($"{player.PlayerName} wins!");
+                    Console.WriteLine($"{(result == GameResult.WinX ? playerX.PlayerName : playerO.PlayerName)} wins!");
                 }
                 else if (result == GameResult.Draw)
                 {
@@ -71,13 +58,19 @@ public static class GameRunner
     /// <param name="winningCells">Optional set of cells to highlight (e.g., winning four).</param>
     private static void PrintBoard(GameBoard board, (int row, int col)? lastMove = null, HashSet<(int row, int col)>? winningCells = null)
     {
+        var grid = board.ToArray();
+        
         for (int row = GameBoard.Rows - 1; row >= 0; row--)
         {
             for (int col = 0; col < GameBoard.Columns; col++)
             {
-                var cell = board[row, col];
-                char c = cell == CellState.Empty ? '.' : (cell == CellState.X ? 'X' : 'O');
-                
+                char c = grid[row, col] switch
+                {
+                    CellState.X => 'X',
+                    CellState.O => 'O',
+                    _ => '.'
+                };
+
                 if (winningCells != null && winningCells.Contains((row, col)))
                 {
                     // Highlight winning cells in green
@@ -99,7 +92,7 @@ public static class GameRunner
             }
             Console.WriteLine();
         }
-        
+
         // Add column numbers for human players
         Console.WriteLine("1 2 3 4 5 6 7");
         Console.WriteLine();
