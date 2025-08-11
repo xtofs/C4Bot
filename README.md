@@ -1,10 +1,31 @@
-# Connect Four AI Tournament & Engine
+# Connect Four console game
 
-## Tournament Results Summary
+## About This Project
 
-The AI tournament system is now complete and running successfully! Here are the key findings:
+This repository contains a modular Connect Four AI engine and tournament system, supporting multiple algorithms:
 
-### TOURNAMENT SUMMARY
+- Monte Carlo Tree Search (MCTS)
+- Negamax (with variable depth)
+- Random player (baseline)
+
+### Features
+
+- Pluggable AI player architecture
+- Tournament automation and statistics
+- Type-safe enum design for clarity and correctness
+- Console interface for interactive play and analysis
+
+### Getting Started
+
+1. Clone the repository
+2. Build with .NET 8.0+
+3. Run tournaments or play interactively via the console project
+
+---
+
+## Connect Four AI Tournament & Engine
+
+### Tournament Results Summary
 
 | Player    | Wins | Losses | Draws | Win Rate |
 | --------- | ---- | ------ | ----- | -------- |
@@ -48,30 +69,9 @@ The AI tournament system is now complete and running successfully! Here are the 
 - **Consistent results:** Random player performed as expected, winning only against occasional mistakes
 
 #### Performance Timing
+
 - **Fastest:** Negamax algorithms (0-3ms per game)
 - **Moderate:** MCTS-500 (6-16ms per game)
 - **Slowest:** MCTS-1000 (13-32ms per game)
 
 ---
-
-## About This Project
-
-This repository contains a modular Connect Four AI engine and tournament system, supporting multiple algorithms:
-- Monte Carlo Tree Search (MCTS)
-- Negamax (with variable depth)
-- Random player (baseline)
-
-### Features
-- Pluggable AI player architecture
-- Tournament automation and statistics
-- Type-safe enum design for clarity and correctness
-- Console interface for interactive play and analysis
-
-### Getting Started
-1. Clone the repository
-2. Build with .NET 8.0+
-3. Run tournaments or play interactively via the console project
-
----
-
-For more details, see the source code and comments.
