@@ -16,6 +16,7 @@ public static class GameRunner
     {
         var board = new GameBoard();
         (int row, int col)? lastMove = null;
+        var moveHistory = new List<int>(); // Track moves for notation
 
         while (true)
         {
@@ -31,6 +32,7 @@ public static class GameRunner
                 Console.WriteLine($"{(state == CellState.X ? "X" : "O")} played {move + 1}");
             }
 
+            moveHistory.Add(move); // Track the move for notation
             board = board.ApplyMove(move, state, out var lastMoveCoords);
             lastMove = lastMoveCoords;
             if (board.HasGameEnded(out var result, out var winningCells))
@@ -45,6 +47,62 @@ public static class GameRunner
                     PrintBoard(board, lastMove);
                     Console.WriteLine("Draw!");
                 }
+                
+                // Print game moves for replay/analysis
+                var moves = GameBoard.ToMoves(moveHistory);
+                Console.WriteLine($"Game moves: {moves}");
+                Console.WriteLine($"To replay this game, use: dotnet run --moves \"{moves}\"");
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Runs a Connect Four game between two players from a pre-loaded board position.
+    /// </summary>
+    /// <param name="playerX">The player for X.</param>
+    /// <param name="playerO">The player for O.</param>
+    /// <param name="startingBoard">The pre-loaded board position to continue from.</param>
+    public static void RunGame(IPlayer playerX, IPlayer playerO, GameBoard startingBoard)
+    {
+        var board = startingBoard;
+        (int row, int col)? lastMove = null;
+        var moveHistory = new List<int>(); // Track moves for notation
+
+        while (true)
+        {
+            PrintBoard(board, lastMove);
+            var turn = board.HalfMoveCount % 2 == 0 ? 0 : 1;
+            var player = turn == 0 ? playerX : playerO;
+            var state = turn == 0 ? CellState.X : CellState.O;
+
+            var move = player.ChooseMove(board, state);
+
+            if (player is not InteractivePlayer)
+            {
+                Console.WriteLine($"{(state == CellState.X ? "X" : "O")} played {move + 1}");
+            }
+
+            moveHistory.Add(move); // Track the move for notation
+            board = board.ApplyMove(move, state, out var lastMoveCoords);
+            lastMove = lastMoveCoords;
+            if (board.HasGameEnded(out var result, out var winningCells))
+            {
+                if (result == GameResult.WinX || result == GameResult.WinO)
+                {
+                    PrintBoard(board, lastMove, winningCells);
+                    Console.WriteLine($"{(result == GameResult.WinX ? playerX.PlayerName : playerO.PlayerName)} wins!");
+                }
+                else if (result == GameResult.Draw)
+                {
+                    PrintBoard(board, lastMove);
+                    Console.WriteLine("Draw!");
+                }
+                
+                // Print game moves for replay/analysis
+                var moves = GameBoard.ToMoves(moveHistory);
+                Console.WriteLine($"Game moves: {moves}");
+                Console.WriteLine($"To replay this game, use: dotnet run --moves \"{moves}\"");
                 break;
             }
         }

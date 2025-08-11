@@ -268,7 +268,7 @@ public sealed class GameBoard
             return [(row, col), (row + 1, col), (row + 2, col), (row + 3, col)];
         }
 
-        // Check diagonal wins (/) - bottom-left to top-right
+        // Check diagonal wins (\) - top-left to bottom-right (up-left direction)
         var diagonal1 = board & (board >> (BitsPerColumn - 1)) & (board >> (2 * (BitsPerColumn - 1))) & (board >> (3 * (BitsPerColumn - 1)));
         if (diagonal1 != 0)
         {
@@ -276,7 +276,7 @@ public sealed class GameBoard
             return [(row, col), (row + 1, col - 1), (row + 2, col - 2), (row + 3, col - 3)];
         }
 
-        // Check diagonal wins (\) - top-left to bottom-right  
+        // Check diagonal wins (/) - bottom-left to top-right (up-right direction)
         var diagonal2 = board & (board >> (BitsPerColumn + 1)) & (board >> (2 * (BitsPerColumn + 1))) & (board >> (3 * (BitsPerColumn + 1)));
         if (diagonal2 != 0)
         {
@@ -322,5 +322,44 @@ public sealed class GameBoard
         }
         
         return grid;
+    }
+
+    /// <summary>
+    /// Creates a GameBoard by replaying a sequence of moves.
+    /// </summary>
+    /// <param name="moves">Move sequence like "4 3 5 2 6 1" (space-separated column numbers)</param>
+    /// <returns>GameBoard after all moves have been applied</returns>
+    public static GameBoard FromMoves(string moves)
+    {
+        if (string.IsNullOrWhiteSpace(moves))
+            return new GameBoard();
+
+        var moveList = moves.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var board = new GameBoard();
+        
+        for (int i = 0; i < moveList.Length; i++)
+        {
+            if (int.TryParse(moveList[i].Trim(), out int col) && col >= 1 && col <= Columns)
+            {
+                var player = i % 2 == 0 ? CellState.X : CellState.O;
+                board = board.ApplyMove(col - 1, player); // Convert to 0-based
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid move '{moveList[i]}' in moves. Moves must be column numbers 1-{Columns}.");
+            }
+        }
+        
+        return board;
+    }
+
+    /// <summary>
+    /// Generates a moves string from a sequence of moves.
+    /// </summary>
+    /// <param name="moves">Sequence of 0-based column numbers</param>
+    /// <returns>Moves string like "4 3 5 2 6 1"</returns>
+    public static string ToMoves(IEnumerable<int> moves)
+    {
+        return string.Join(" ", moves.Select(col => (col + 1).ToString()));
     }
 }
