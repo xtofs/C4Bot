@@ -88,12 +88,14 @@ The inner `Values` enum is public because:
 ### Usage Patterns
 
 #### For Equality Comparisons (Recommended)
+
 ```csharp
 if (cellState == CellState.X)     // ✅ Clean and type-safe
 if (cellState == Player.X)        // ✅ Cross-type equality works
 ```
 
 #### For Switch Statements (Required)
+
 ```csharp
 switch (cellState.Value)
 {
@@ -104,22 +106,25 @@ switch (cellState.Value)
 ```
 
 #### For Method Parameters
+
 ```csharp
 // Both work due to implicit conversions
 board.ApplyMove(col, Player.X);           // ✅ Smart struct
-board.ApplyMove(col, CellState.Values.X); // ✅ Underlying enum
+board.ApplyMove(col, CellState.X);        // ✅ Implicit conversion
 ```
 
 ### Implementation Examples
 
 #### CellState and Player
-- `CellState`: Empty, X, O (represents board cell state)
+
 - `Player`: X, O (represents active players, no Empty state)
+- `CellState`: Empty, X, O (represents board cell state)
 - Cross-type equality: `Player.X == CellState.X` returns `true`
 
 #### GameState and GameResult  
-- `GameState`: Ongoing, XWin, OWin, Draw (all possible game states)
+
 - `GameResult`: XWin, OWin, Draw (terminal states only, no Ongoing)
+- `GameState`: Ongoing, XWin, OWin, Draw (all possible game states)
 - Cross-type equality: `GameState.XWin == GameResult.XWin` returns `true`
 
 ### Migration Strategy
