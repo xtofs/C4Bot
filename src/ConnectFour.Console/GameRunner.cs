@@ -143,10 +143,10 @@ public static class GameRunner
         {
             for (int col = 0; col < GameBoard.Columns; col++)
             {
-                char c = grid[row, col] switch
+                char c = grid[row, col].Value switch
                 {
-                    CellState.X => 'X',
-                    CellState.O => 'O',
+                    CellState.Values.X => 'X',
+                    CellState.Values.O => 'O',
                     _ => '.'
                 };
 

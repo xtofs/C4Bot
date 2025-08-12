@@ -54,15 +54,15 @@ public class MinimaxEngine
     private int Minimax(GameBoard board, CellState player, int depth, int alpha, int beta, CellState originalPlayer)
     {
         var result = board.GetGameState();
-        switch (result)
+        switch (result.Value)
         {
-            case GameState.WinX:
+            case GameState.Values.XWin:
                 return player == CellState.X ? 10000 + depth : -10000 - depth;
-            case GameState.WinO:
+            case GameState.Values.OWin:
                 return player == CellState.O ? 10000 + depth : -10000 - depth;
-            case GameState.Draw:
+            case GameState.Values.Draw:
                 return 0;
-            case GameState.Ongoing:
+            case GameState.Values.Ongoing:
                 // Continue to evaluation
                 break;
             default:

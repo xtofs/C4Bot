@@ -63,27 +63,27 @@ public class Tournament
             totalTime += gameTime;
 
             // Count wins based on original player order
-            switch (result)
+            switch (result.Value)
             {
-                case GameResult.WinX when game % 2 == 0: // player1 was X
-                case GameResult.WinO when game % 2 == 1: // player1 was O
+                case GameResult.Values.XWin when game % 2 == 0: // player1 was X
+                case GameResult.Values.OWin when game % 2 == 1: // player1 was O
                     player1Wins++;
                     break;
 
-                case GameResult.WinX when game % 2 == 1: // player2 was X
-                case GameResult.WinO when game % 2 == 0: // player2 was O
+                case GameResult.Values.XWin when game % 2 == 1: // player2 was X
+                case GameResult.Values.OWin when game % 2 == 0: // player2 was O
                     player2Wins++;
                     break;
 
-                case GameResult.Draw:
+                case GameResult.Values.Draw:
                     draws++;
                     break;
 
-                case GameResult.WinX:
-                case GameResult.WinO:
+                case GameResult.Values.XWin:
+                case GameResult.Values.OWin:
                     // unreachable because `game % 2` is always either 0 or 1
                     throw new InvalidOperationException("Unexpected game result in tournament: " + result);
-                    
+
                 default:
                     break;
             }
@@ -134,7 +134,7 @@ public class Tournament
             if (state != GameState.Ongoing)
             {
                 // Only return a GameResult for terminal states
-                return state.ToGameResult();
+                return state;
             }
 
             currentPlayer = currentPlayer == CellState.X ? CellState.O : CellState.X;

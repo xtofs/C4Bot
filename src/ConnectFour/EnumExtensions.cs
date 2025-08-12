@@ -20,11 +20,11 @@ public static class EnumExtensions
     /// <summary>
     /// Converts a GameResult to TerminalGameResult (throws if Ongoing).
     /// </summary>
-    public static TerminalGameResult ToTerminalResult(this GameResult gameResult) => gameResult switch
+    public static TerminalGameResult ToTerminalResult(this GameResult gameResult) => gameResult.Value switch
     {
-        GameResult.WinX => TerminalGameResult.WinX,
-        GameResult.WinO => TerminalGameResult.WinO,
-        GameResult.Draw => TerminalGameResult.Draw,
+        GameResult.Values.XWin => TerminalGameResult.WinX,
+        GameResult.Values.OWin => TerminalGameResult.WinO,
+        GameResult.Values.Draw => TerminalGameResult.Draw,
         _ => throw new ArgumentOutOfRangeException(nameof(gameResult))
     };
 

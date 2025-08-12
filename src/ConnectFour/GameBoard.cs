@@ -152,7 +152,7 @@ public sealed class GameBoard
     /// <exception cref="InvalidOperationException">Thrown if the column is full.</exception>
     public GameBoard ApplyMove(int col, Player player)
     {
-        return ApplyMove(col, player.ToCellState());
+        return ApplyMove(col, (CellState)player);
     }
 
     /// <summary>
@@ -165,7 +165,7 @@ public sealed class GameBoard
     /// <exception cref="InvalidOperationException">Thrown if the column is full.</exception>
     public GameBoard ApplyMove(int col, Player player, out (int row, int col) placedAt)
     {
-        return ApplyMove(col, player.ToCellState(), out placedAt);
+        return ApplyMove(col, (CellState)player, out placedAt);
     }
 
     private bool IsWin(CellState player)
@@ -450,7 +450,7 @@ public sealed class GameBoard
     /// <returns>A list of (row, col) positions where the player can win with one move</returns>
     public List<(int row, int col)> FindThreats(Player player)
     {
-        return FindThreats(player.ToCellState());
+        return FindThreats((CellState)player);
     }
 
     private static ulong GetColumnMask(int col)
