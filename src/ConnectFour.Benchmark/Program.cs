@@ -10,7 +10,7 @@ internal class Program
         Console.WriteLine();
 
         // Configure tournament parameters
-        var gamesPerMatch = int.TryParse(args[0], out var result) ? result : 100;
+        var gamesPerMatch = (args.Length  > 0 && int.TryParse(args[0], out var result)) ? result : 100;
 
         var players = new IPlayer[]
         {

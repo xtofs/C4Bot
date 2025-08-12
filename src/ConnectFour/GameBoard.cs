@@ -1,15 +1,17 @@
 namespace ConnectFour;
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 
+[DebuggerDisplay("X: {XBitboardBinary} | O: {OBitboardBinary}")]
 public sealed class GameBoard
 {
     public const int Rows = 6;
     public const int Columns = 7;
-    private const int BitsPerColumn = Rows + 1;
-    private const ulong BoardMask = 0x1FFFFFFFFFFFFUL;
-    private const ulong TopRowMask = 0x40810204081UL; // Top row of each column
+    private const int BitsPerColumn = 8; // One full byte per column for easier bit manipulation
+    private const ulong BoardMask = 0x3F3F3F3F3F3F3FUL; // Rows 0-5 for each column (6 bits per column)
+    private const ulong TopRowMask = 0x2020202020202020UL; // Row 5 (top playable row) of each column
 
     /// <summary>
     /// Gets the bitboard for player X (for advanced position evaluation).
@@ -22,12 +24,12 @@ public sealed class GameBoard
     /// Be aware that this is an implementation detail and should be used with caution.
     /// The bit layout is: 
     ///     bit number i represents the grid cell (col,row) where 
-    ///     i = col * 7 + row,
-    ///     col = i / 7, 
-    ///     row = i % 7.
-    /// Each column uses 7 bits (rows 0-5 for the board, bit 6 is unused).
-    /// Bit positions 0-6 are column 0, bits 7-13 are column 1, etc.
-    /// For example: bit 0 = (0,0), bit 1 = (0,1), bit 7 = (1,0), bit 14 = (2,0).
+    ///     i = col * 8 + row,
+    ///     col = i / 8, 
+    ///     row = i % 8.
+    /// Each column uses 8 bits (one byte): rows 0-5 for the board, bits 6-7 are unused.
+    /// Bit positions 0-7 are column 0, bits 8-15 are column 1, etc.
+    /// For example: bit 0 = (0,0), bit 1 = (0,1), bit 8 = (1,0), bit 16 = (2,0).
     /// </summary>    
     public ulong XBitboard { get; }
 
@@ -42,14 +44,18 @@ public sealed class GameBoard
     /// Be aware that this is an implementation detail and should be used with caution.
     /// The bit layout is: 
     ///     bit number i represents the grid cell (col,row) where 
-    ///     i = col * 7 + row,
-    ///     col = i / 7, 
-    ///     row = i % 7.
-    /// Each column uses 7 bits (rows 0-5 for the board, bit 6 is unused).
-    /// Bit positions 0-6 are column 0, bits 7-13 are column 1, etc.
-    /// For example: bit 0 = (0,0), bit 1 = (0,1), bit 7 = (1,0), bit 14 = (2,0).
+    ///     i = col * 8 + row,
+    ///     col = i / 8, 
+    ///     row = i % 8.
+    /// Each column uses 8 bits (one byte): rows 0-5 for the board, bits 6-7 are unused.
+    /// Bit positions 0-7 are column 0, bits 8-15 are column 1, etc.
+    /// For example: bit 0 = (0,0), bit 1 = (0,1), bit 8 = (1,0), bit 16 = (2,0).
     /// </summary>    
     public ulong OBitboard { get; }
+
+    // Properties for DebuggerDisplay to show bitboards as binary with column separators
+    private string XBitboardBinary => FormatBitboardAsBinary(XBitboard);
+    private string OBitboardBinary => FormatBitboardAsBinary(OBitboard);
 
     public GameBoard() : this(0, 0)
     {
@@ -197,31 +203,40 @@ public sealed class GameBoard
         return ((XBitboard | OBitboard) & BoardMask) == BoardMask;
     }
 
+    [Obsolete("Use ReadOnlySpan<int> GetAvailableMoves(Span<int> moves) instead for better performance")]
     public int[] GetAvailableMoves()
     {
-        var moves = new List<int>();
-        for (var col = 0; col < Columns; col++)
-        {
-            if (!IsColumnFull(col))
-            {
-                moves.Add(col);
-            }
-        }
-
-        return moves.ToArray();
+        Span<int> buffer = stackalloc int[Columns];
+        var ros = GetAvailableMoves(buffer);
+        return ros.ToArray();
     }
 
-    public void GetAvailableMoves(Span<int> moves, out int count)
+    private static ReadOnlySpan<int> AllColumns => [0, 1, 2, 3, 4, 5, 6];
+
+    public ReadOnlySpan<int> GetAvailableMoves(Span<int> moves)
     {
-        count = 0;
-        ulong topRow = (XBitboard | OBitboard) & TopRowMask;  // Check which columns are full
-        for (int col = 0; col < Columns; col++)
+
+        // Short-circuit for empty board or early game
+        var occupied = XBitboard | OBitboard;
+        if (occupied == 0 || BitOperations.PopCount(occupied & TopRowMask) == 0)
         {
-            if ((topRow & (1UL << (col * BitsPerColumn + Rows - 1))) == 0)
-            {
-                moves[count++] = col;
-            }
+            return AllColumns;
         }
+
+        var count = 0;
+
+        // Get all non-full columns in one operation
+        var availableColumns = ~(XBitboard | OBitboard) & TopRowMask;
+
+        // Extract column indices from the bit pattern
+        while (availableColumns != 0)
+        {
+            var bitPos = BitOperations.TrailingZeroCount(availableColumns);
+            moves[count++] = bitPos / BitsPerColumn;
+            availableColumns &= availableColumns - 1; // Clear the lowest set bit
+        }
+
+        return moves[..count];
     }
 
     /// <summary>
@@ -347,9 +362,9 @@ public sealed class GameBoard
     /// </summary>
     private static (int row, int col) GetFirstSetBit(ulong bitboard)
     {
-        int bitPosition = BitOperations.TrailingZeroCount(bitboard);
-        int col = bitPosition / BitsPerColumn;
-        int row = bitPosition % BitsPerColumn;
+        var bitPosition = BitOperations.TrailingZeroCount(bitboard);
+        var col = bitPosition / BitsPerColumn;
+        var row = bitPosition % BitsPerColumn;
         return (row, col);
     }
 
@@ -361,12 +376,12 @@ public sealed class GameBoard
     public CellState[,] ToArray()
     {
         var grid = new CellState[Rows, Columns];
-        
-        for (int row = 0; row < Rows; row++)
+
+        for (var row = 0; row < Rows; row++)
         {
-            for (int col = 0; col < Columns; col++)
+            for (var col = 0; col < Columns; col++)
             {
-                ulong position = 1UL << (col * BitsPerColumn + row);
+                var position = 1UL << (col * BitsPerColumn + row);
                 if ((XBitboard & position) != 0)
                     grid[row, col] = CellState.X;
                 else if ((OBitboard & position) != 0)
@@ -375,7 +390,7 @@ public sealed class GameBoard
                     grid[row, col] = CellState.Empty;
             }
         }
-        
+
         return grid;
     }
 
@@ -387,19 +402,19 @@ public sealed class GameBoard
     public List<(int row, int col)> FindThreats(CellState player)
     {
         var threats = new List<(int row, int col)>();
-        
+
         // Check each available column
-        for (int col = 0; col < Columns; col++)
+        for (var col = 0; col < Columns; col++)
         {
             if (!IsColumnFull(col))
             {
                 // Find the row where the piece would land using bitboards
                 var columnMask = GetColumnMask(col);
                 var occupiedInColumn = (XBitboard | OBitboard) & columnMask;
-                
+
                 // Find the lowest empty position in the column
-                int row = -1;
-                for (int r = 0; r < Rows; r++)
+                var row = -1;
+                for (var r = 0; r < Rows; r++)
                 {
                     var position = GetPosition(r, col);
                     if ((occupiedInColumn & position) == 0)
@@ -408,7 +423,7 @@ public sealed class GameBoard
                         break;
                     }
                 }
-                
+
                 if (row != -1)
                 {
                     // Simulate placing the piece and check if it wins
@@ -424,7 +439,7 @@ public sealed class GameBoard
                 }
             }
         }
-        
+
         return threats;
     }
 
@@ -440,9 +455,9 @@ public sealed class GameBoard
 
     private static ulong GetColumnMask(int col)
     {
-        return 0x7FUL << (col * BitsPerColumn);
+        return 0xFFUL << (col * BitsPerColumn); // Full byte mask for each column
     }
-    
+
     private static ulong GetPosition(int row, int col)
     {
         return 1UL << (col * BitsPerColumn + row);
@@ -460,10 +475,10 @@ public sealed class GameBoard
 
         var moveList = moves.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var board = new GameBoard();
-        
-        for (int i = 0; i < moveList.Length; i++)
+
+        for (var i = 0; i < moveList.Length; i++)
         {
-            if (int.TryParse(moveList[i].Trim(), out int col) && col >= 1 && col <= Columns)
+            if (int.TryParse(moveList[i].Trim(), out var col) && col >= 1 && col <= Columns)
             {
                 var player = i % 2 == 0 ? CellState.X : CellState.O;
                 board = board.ApplyMove(col - 1, player); // Convert to 0-based
@@ -473,7 +488,7 @@ public sealed class GameBoard
                 throw new ArgumentException($"Invalid move '{moveList[i]}' in moves. Moves must be column numbers 1-{Columns}.");
             }
         }
-        
+
         return board;
     }
 
@@ -485,5 +500,59 @@ public sealed class GameBoard
     public static string ToMoves(IEnumerable<int> moves)
     {
         return string.Join(" ", moves.Select(col => (col + 1).ToString()));
+    }
+
+    /// <summary>
+    /// Debug method: Returns a string representation of both bitboards as binary numbers with column separators.
+    /// Useful for understanding the internal bitboard representation.
+    /// </summary>
+    /// <returns>A debug string showing X and O bitboards in binary format</returns>
+    public string ToDebugBitboards()
+    {
+        var sb = new System.Text.StringBuilder();
+        
+        sb.AppendLine("Bitboard Debug View (8 bits per column, columns 0-6 from right to left):");
+        sb.AppendLine();
+        
+        // Format XBitboard
+        sb.Append("X Bitboard: ");
+        sb.AppendLine(FormatBitboardAsBinary(XBitboard));
+        sb.AppendLine($"X Decimal:  {XBitboard}");
+        sb.AppendLine($"X Hex:      0x{XBitboard:X}");
+        sb.AppendLine();
+        
+        // Format OBitboard
+        sb.Append("O Bitboard: ");
+        sb.AppendLine(FormatBitboardAsBinary(OBitboard));
+        sb.AppendLine($"O Decimal:  {OBitboard}");
+        sb.AppendLine($"O Hex:      0x{OBitboard:X}");
+        sb.AppendLine();
+        
+        // Combined view
+        sb.Append("Combined:   ");
+        sb.AppendLine(FormatBitboardAsBinary(XBitboard | OBitboard));
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Helper method to format a bitboard as binary with column separators.
+    /// </summary>
+    private static string FormatBitboardAsBinary(ulong bitboard)
+    {
+        var binary = Convert.ToString((long)bitboard, 2).PadLeft(56, '0'); // 7 columns * 8 bits = 56 bits
+        var sb = new System.Text.StringBuilder();
+        
+        // Add column separators (working from right to left since that's how bits are numbered)
+        for (int i = 0; i < 7; i++)
+        {
+            var startPos = i * 8;
+            var columnBits = binary.Substring(binary.Length - startPos - 8, 8);
+            
+            if (i > 0) sb.Insert(0, "|");
+            sb.Insert(0, columnBits);
+        }
+        
+        return sb.ToString();
     }
 }

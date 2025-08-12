@@ -79,6 +79,11 @@ public class Tournament
                     draws++;
                     break;
 
+                case GameResult.WinX:
+                case GameResult.WinO:
+                    // unreachable because `game % 2` is always either 0 or 1
+                    throw new InvalidOperationException("Unexpected game result in tournament: " + result);
+                    
                 default:
                     break;
             }
@@ -109,7 +114,7 @@ public class Tournament
     {
         var board = new GameBoard();
         var currentPlayer = CellState.X;
-        Span<int> availableMoves = stackalloc int[GameBoard.Columns];
+        Span<int> buffer = stackalloc int[GameBoard.Columns];
 
         while (true)
         {
@@ -117,21 +122,10 @@ public class Tournament
             var move = player.ChooseMove(board, currentPlayer);
 
             // Validate the move is valid
-            board.GetAvailableMoves(availableMoves, out var availableCount);
-            var isValidMove = false;
-            for (var i = 0; i < availableCount; i++)
+            var availableMoves = board.GetAvailableMoves(buffer);
+            if (! availableMoves.Contains(move))
             {
-                if (availableMoves[i] == move)
-                {
-                    isValidMove = true;
-                    break;
-                }
-            }
-
-            if (!isValidMove)
-            {
-                // If the player made an invalid move, they lose
-                return currentPlayer == CellState.X ? GameResult.WinO : GameResult.WinX;
+                throw new InvalidOperationException($"move {move} is not available {string.Join(", ", availableMoves.ToArray())}");
             }
 
             board = board.ApplyMove(move, currentPlayer);

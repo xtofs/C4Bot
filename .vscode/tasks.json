@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotnet",
+			"task": "run ConnectFour.Benchmark 10",
+			"file": "D:\\xtofs\\C4Bot\\src\\ConnectFour.Benchmark\\ConnectFour.Benchmark.csproj",
+			"problemMatcher": [],
+			"label": "dotnet: run ConnectFour.Benchmark 10"
+		}
+	]
+} 

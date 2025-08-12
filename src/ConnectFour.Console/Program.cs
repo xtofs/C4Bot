@@ -63,6 +63,9 @@ class Program
                 Console.WriteLine("1 2 3 4 5 6 7");
                 Console.WriteLine();
                 
+                // Show debug bitboards
+                Console.WriteLine(board.ToDebugBitboards());
+                
                 // Check if the game has already ended
                 if (board.HasGameEnded(out var result, out var winningCells))
                 {

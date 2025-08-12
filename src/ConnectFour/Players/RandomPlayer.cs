@@ -25,7 +25,9 @@ public class RandomPlayer : IPlayer
     /// <inheritdoc/>
     public int ChooseMove(GameBoard board, CellState player)
     {
-        var moves = board.GetAvailableMoves();
+        Span<int> buffer = stackalloc int[GameBoard.Columns];
+        var moves = board.GetAvailableMoves(buffer);
+        
         return moves[_random.Next(moves.Length)];
     }
 }

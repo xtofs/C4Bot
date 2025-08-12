@@ -30,8 +30,11 @@ public class MinimaxEngine
     {
         var bestMove = -1;
         var bestScore = int.MinValue;
-        
-        foreach (var move in board.GetAvailableMoves())
+
+        // foreach (var move in board.GetAvailableMoves())
+        Span<int> moves = stackalloc int[7];
+
+        foreach (var move in board.GetAvailableMoves(moves))
         {
             var newBoard = board.ApplyMove(move, player);
             var score = -Minimax(newBoard, Opponent(player), MaxDepth - 1, int.MinValue, int.MaxValue, player);
@@ -41,7 +44,7 @@ public class MinimaxEngine
                 bestMove = move;
             }
         }
-        
+
         return bestMove;
     }
 
@@ -62,6 +65,8 @@ public class MinimaxEngine
             case GameState.Ongoing:
                 // Continue to evaluation
                 break;
+            default:
+                throw new InvalidOperationException($"Unexpected game state value: {result}");
         }
 
         // Use evaluator at leaf nodes
